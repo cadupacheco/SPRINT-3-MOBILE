@@ -1,253 +1,272 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Button, Text, RadioButton, TextInput } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useMotorcycles } from '../context/MotorcycleContext';
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import { Button, Text, RadioButton, TextInput, ActivityIndicator } from "react-native-paper";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { useMotorcycles } from "../context/MotorcycleContext";
 
-type AddMotorcycleNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddMotorcycle'>;
+type AddMotorcycleNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "AddMotorcycle"
+>;
 
 export default function AddMotorcycleScreen() {
-    const navigation = useNavigation<AddMotorcycleNavigationProp>();
-    const { actions } = useMotorcycles();
-    
-    // Estados para os campos do formulário - ATUALIZADO para incluir 'out_of_service'
-    const [model, setModel] = useState('');
-    const [plate, setPlate] = useState('');
-    const [status, setStatus] = useState<'available' | 'maintenance' | 'rented' | 'out_of_service'>('available');
-    const [locationX, setLocationX] = useState('');
-    const [locationY, setLocationY] = useState('');
-    
-    // Estados para validação
-    const [errors, setErrors] = useState({
-        model: '',
-        plate: '',
-        locationX: '',
-        locationY: '',
-    });
+  const navigation = useNavigation<AddMotorcycleNavigationProp>();
+  const { actions } = useMotorcycles();
 
-    // Função para validar o formulário
-    const validateForm = () => {
-        let isValid = true;
-        const newErrors = {
-            model: '',
-            plate: '',
-            locationX: '',
-            locationY: '',
-        };
+  // Estados do formulário
+  const [model, setModel] = useState("");
+  const [plate, setPlate] = useState("");
+  const [status, setStatus] = useState<
+    "available" | "maintenance" | "rented" | "out_of_service"
+  >("available");
+  const [locationX, setLocationX] = useState("");
+  const [locationY, setLocationY] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        if (!model.trim()) {
-            newErrors.model = 'Modelo é obrigatório';
-            isValid = false;
-        }
+  // Estados de erro
+  const [errors, setErrors] = useState({
+    model: "",
+    plate: "",
+    locationX: "",
+    locationY: "",
+  });
 
-        if (!plate.trim()) {
-            newErrors.plate = 'Placa é obrigatória';
-            isValid = false;
-        } else if (!/^[A-Z]{3}\d{4}$/.test(plate)) {
-            newErrors.plate = 'Formato de placa inválido (AAA0000)';
-            isValid = false;
-        }
+  // Função de validação
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { model: "", plate: "", locationX: "", locationY: "" };
 
-        if (!locationX.trim()) {
-            newErrors.locationX = 'Coordenada X é obrigatória';
-            isValid = false;
-        } else if (isNaN(Number(locationX))) {
-            newErrors.locationX = 'Coordenada X deve ser um número';
-            isValid = false;
-        }
+    if (!model.trim()) {
+      newErrors.model = "Modelo é obrigatório";
+      isValid = false;
+    }
 
-        if (!locationY.trim()) {
-            newErrors.locationY = 'Coordenada Y é obrigatória';
-            isValid = false;
-        } else if (isNaN(Number(locationY))) {
-            newErrors.locationY = 'Coordenada Y deve ser um número';
-            isValid = false;
-        }
+    if (!plate.trim()) {
+      newErrors.plate = "Placa é obrigatória";
+      isValid = false;
+    } else if (!/^[A-Z]{3}\d{4}$/.test(plate)) {
+      newErrors.plate = "Formato inválido (ex: ABC1234)";
+      isValid = false;
+    }
 
-        setErrors(newErrors);
-        return isValid;
+    if (!locationX.trim()) {
+      newErrors.locationX = "Coordenada X é obrigatória";
+      isValid = false;
+    } else if (isNaN(Number(locationX))) {
+      newErrors.locationX = "Coordenada X deve ser numérica";
+      isValid = false;
+    }
+
+    if (!locationY.trim()) {
+      newErrors.locationY = "Coordenada Y é obrigatória";
+      isValid = false;
+    } else if (isNaN(Number(locationY))) {
+      newErrors.locationY = "Coordenada Y deve ser numérica";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Salvar moto
+  const handleSaveMotorcycle = async () => {
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    const newMotorcycle = {
+      model,
+      plate,
+      status,
+      location: {
+        x: Number(locationX),
+        y: Number(locationY),
+      },
+      batteryLevel: Math.floor(Math.random() * 100),
+      fuelLevel: Math.floor(Math.random() * 100),
+      mileage: Math.floor(Math.random() * 50000),
+      nextMaintenanceDate: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000
+      ).toISOString(),
+      assignedBranch: "São Paulo Centro",
+      lastUpdate: new Date().toISOString(),
     };
 
-    // Função para salvar a moto
-    const handleSaveMotorcycle = async () => {
-        if (!validateForm()) {
-            return;
+    const success = await actions.addMotorcycle(newMotorcycle);
+
+    setLoading(false);
+
+    if (success) {
+      Alert.alert("Sucesso", "Moto adicionada com sucesso!", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("Home"),
+        },
+      ]);
+    } else {
+      Alert.alert("Erro", "Não foi possível salvar a moto.");
+    }
+  };
+
+  return (
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      <Text style={styles.title}>Adicionar Nova Moto</Text>
+
+      {/* Modelo */}
+      <TextInput
+        label="Modelo"
+        value={model}
+        onChangeText={setModel}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.model}
+        autoComplete="off"
+      />
+      {errors.model ? <Text style={styles.errorText}>{errors.model}</Text> : null}
+
+      {/* Placa */}
+      <TextInput
+        label="Placa (ABC1234)"
+        value={plate}
+        onChangeText={(text) => setPlate(text.toUpperCase())}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.plate}
+        autoCapitalize="characters"
+        maxLength={7}
+        autoComplete="off"
+      />
+      {errors.plate ? <Text style={styles.errorText}>{errors.plate}</Text> : null}
+
+      {/* Status */}
+      <Text style={styles.sectionTitle}>Status</Text>
+      <RadioButton.Group
+        onValueChange={(value) =>
+          setStatus(
+            value as "available" | "maintenance" | "rented" | "out_of_service"
+          )
         }
+        value={status}
+      >
+        <View style={styles.radioContainer}>
+          <RadioButton.Item label="Disponível" value="available" />
+          <RadioButton.Item label="Em Manutenção" value="maintenance" />
+          <RadioButton.Item label="Alugada" value="rented" />
+          <RadioButton.Item label="Fora de Serviço" value="out_of_service" />
+        </View>
+      </RadioButton.Group>
 
-        const newMotorcycle = {
-            model,
-            plate,
-            status,
-            location: {
-                x: Number(locationX),
-                y: Number(locationY),
-            },
-            batteryLevel: Math.floor(Math.random() * 100),
-            fuelLevel: Math.floor(Math.random() * 100),
-            mileage: Math.floor(Math.random() * 50000),
-            nextMaintenanceDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            assignedBranch: 'São Paulo Centro',
-            lastUpdate: new Date().toISOString(),
-        };
+      {/* Localização */}
+      <Text style={styles.sectionTitle}>Localização no Pátio</Text>
+      <View style={styles.locationContainer}>
+        <View style={styles.locationInput}>
+          <TextInput
+            label="Coordenada X"
+            value={locationX}
+            onChangeText={setLocationX}
+            mode="outlined"
+            keyboardType="numeric"
+            error={!!errors.locationX}
+            autoComplete="off"
+          />
+          {errors.locationX ? (
+            <Text style={styles.errorText}>{errors.locationX}</Text>
+          ) : null}
+        </View>
 
-        const success = await actions.addMotorcycle(newMotorcycle);
-        
-        if (success) {
-            Alert.alert(
-                'Sucesso',
-                'Moto adicionada com sucesso!',
-                [
-                    { 
-                        text: 'OK', 
-                        onPress: () => navigation.navigate('Home')
-                    }
-                ]
-            );
-        } else {
-            Alert.alert('Erro', 'Não foi possível salvar a moto.');
-        }
-    };
+        <View style={styles.locationInput}>
+          <TextInput
+            label="Coordenada Y"
+            value={locationY}
+            onChangeText={setLocationY}
+            mode="outlined"
+            keyboardType="numeric"
+            error={!!errors.locationY}
+            autoComplete="off"
+          />
+          {errors.locationY ? (
+            <Text style={styles.errorText}>{errors.locationY}</Text>
+          ) : null}
+        </View>
+      </View>
 
-    return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.title}>Adicionar Nova Moto - IdeaTec</Text>
-            
-            <TextInput
-                label="Modelo"
-                value={model}
-                onChangeText={setModel}
-                mode="outlined"
-                style={styles.input}
-                error={!!errors.model}
-                autoComplete="off"
-            />
-            {errors.model ? <Text style={styles.errorText}>{errors.model}</Text> : null}
-            
-            <TextInput
-                label="Placa (AAA0000)"
-                value={plate}
-                onChangeText={(text) => setPlate(text.toUpperCase())}
-                mode="outlined"
-                style={styles.input}
-                error={!!errors.plate}
-                autoCapitalize="characters"
-                maxLength={7}
-                autoComplete="off"
-            />
-            {errors.plate ? <Text style={styles.errorText}>{errors.plate}</Text> : null}
-            
-            <Text style={styles.sectionTitle}>Status</Text>
-            <RadioButton.Group 
-                onValueChange={(value) => setStatus(value as 'available' | 'maintenance' | 'rented' | 'out_of_service')} 
-                value={status}
-            >
-                <View style={styles.radioContainer}>
-                    <RadioButton.Item label="Disponível" value="available" />
-                    <RadioButton.Item label="Em Manutenção" value="maintenance" />
-                    <RadioButton.Item label="Alugada" value="rented" />
-                    <RadioButton.Item label="Fora de Serviço" value="out_of_service" />
-                </View>
-            </RadioButton.Group>
-            
-            <Text style={styles.sectionTitle}>Localização no Pátio</Text>
-            <View style={styles.locationContainer}>
-                <View style={styles.locationInput}>
-                    <TextInput
-                        label="Coordenada X"
-                        value={locationX}
-                        onChangeText={setLocationX}
-                        mode="outlined"
-                        keyboardType="numeric"
-                        error={!!errors.locationX}
-                        autoComplete="off"
-                    />
-                    {errors.locationX ? <Text style={styles.errorText}>{errors.locationX}</Text> : null}
-                </View>
-                
-                <View style={styles.locationInput}>
-                    <TextInput
-                        label="Coordenada Y"
-                        value={locationY}
-                        onChangeText={setLocationY}
-                        mode="outlined"
-                        keyboardType="numeric"
-                        error={!!errors.locationY}
-                        autoComplete="off"
-                    />
-                    {errors.locationY ? <Text style={styles.errorText}>{errors.locationY}</Text> : null}
-                </View>
-            </View>
-            
-            <View style={styles.buttonContainer}>
-                <Button 
-                    mode="outlined" 
-                    onPress={() => navigation.goBack()} 
-                    style={styles.button}
-                    icon="close"
-                >
-                    Cancelar
-                </Button>
-                
-                <Button 
-                    mode="contained" 
-                    onPress={handleSaveMotorcycle} 
-                    style={styles.button}
-                    icon="content-save"
-                >
-                    Salvar
-                </Button>
-            </View>
-        </ScrollView>
-    );
+      {/* Botões */}
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="outlined"
+          onPress={() => navigation.goBack()}
+          style={styles.button}
+          icon="close"
+          disabled={loading}
+        >
+          Cancelar
+        </Button>
+
+        <Button
+          mode="contained"
+          onPress={handleSaveMotorcycle}
+          style={styles.button}
+          icon="content-save"
+          loading={loading}
+          disabled={loading}
+        >
+          {loading ? "Salvando..." : "Salvar"}
+        </Button>
+      </View>
+
+      {loading && <ActivityIndicator animating size="large" />}
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: '#f5f5f5',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    input: {
-        marginBottom: 8,
-    },
-    errorText: {
-        color: 'red',
-        fontSize: 12,
-        marginBottom: 8,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 16,
-        marginBottom: 8,
-    },
-    radioContainer: {
-        backgroundColor: 'white',
-        borderRadius: 8,
-    },
-    locationContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    locationInput: {
-        flex: 1,
-        marginHorizontal: 4,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginTop: 24,
-        marginBottom: 24,
-    },
-    button: {
-        flex: 1,
-        marginHorizontal: 4,
-    },
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  input: {
+    marginBottom: 8,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  radioContainer: {
+    backgroundColor: "white",
+    borderRadius: 8,
+  },
+  locationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  locationInput: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  button: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
 });

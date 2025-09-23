@@ -9,6 +9,7 @@ import MapScreen from '../screens/MapScreen';
 import MotorcycleDetailsScreen from '../screens/MotorcycleDetailsScreen';
 import AddMotorcycleScreen from '../screens/AddMotorcycleScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import { Motorcycle } from '../utils/storage';
 
 // Definindo tipos para os parâmetros de navegação
 export type RootStackParamList = {
@@ -16,7 +17,7 @@ export type RootStackParamList = {
   Dashboard: undefined;
   Map: undefined;
   MotorcycleDetails: { id: string };
-  AddMotorcycle: undefined;
+  AddMotorcycle: { motorcycle?: Motorcycle } | undefined;
   Settings: undefined;
 };
 
