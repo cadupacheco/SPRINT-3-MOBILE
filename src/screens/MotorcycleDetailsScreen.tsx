@@ -8,6 +8,8 @@ import {
   Button,
   Divider,
   ProgressBar,
+  useTheme,
+  ActivityIndicator,
 } from "react-native-paper";
 import {
   RouteProp,
@@ -35,6 +37,8 @@ export default function MotorcycleDetailsScreen() {
 
   const { state, actions } = useMotorcycles();
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false); // <-- novo
+  const theme = useTheme();
 
   // Encontrar a moto pelo ID
   const motorcycle = state.motorcycles.find((m) => m.id === id);
@@ -49,15 +53,21 @@ export default function MotorcycleDetailsScreen() {
     newStatus: "available" | "maintenance" | "rented" | "out_of_service"
   ) => {
     if (!motorcycle) return;
-
-    const success = await actions.updateMotorcycleById(id, {
-      status: newStatus,
-    });
-
-    if (success) {
-      Alert.alert("Sucesso", "Status da moto atualizado com sucesso!");
-    } else {
-      Alert.alert("Erro", "Não foi possível atualizar o status da moto.");
+    try {
+      setActionLoading(true);
+      const success = await actions.updateMotorcycleById(id, {
+        status: newStatus,
+      });
+      if (success) {
+        await actions.loadMotorcycles(); // refresh da lista
+        Alert.alert("Sucesso", "Status da moto atualizado com sucesso!");
+      } else {
+        Alert.alert("Erro", "Não foi possível atualizar o status da moto.");
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Falha ao comunicar com a API.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -71,12 +81,20 @@ export default function MotorcycleDetailsScreen() {
           text: "Excluir",
           style: "destructive",
           onPress: async () => {
-            const success = await actions.deleteMotorcycleById(id);
-            if (success) {
-              Alert.alert("Sucesso", "Moto excluída com sucesso!");
-              navigation.navigate("Dashboard");
-            } else {
-              Alert.alert("Erro", "Não foi possível excluir a moto.");
+            try {
+              setActionLoading(true);
+              const success = await actions.deleteMotorcycleById(id);
+              if (success) {
+                await actions.loadMotorcycles(); // refresh da lista
+                Alert.alert("Sucesso", "Moto excluída com sucesso!");
+                navigation.navigate("Dashboard");
+              } else {
+                Alert.alert("Erro", "Não foi possível excluir a moto.");
+              }
+            } catch (error) {
+              Alert.alert("Erro", "Falha ao comunicar com a API.");
+            } finally {
+              setActionLoading(false);
             }
           },
         },
@@ -138,7 +156,7 @@ export default function MotorcycleDetailsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.title}>{motorcycle.model}</Title>
@@ -237,45 +255,51 @@ export default function MotorcycleDetailsScreen() {
           <Title style={styles.sectionTitle}>Alterar Status</Title>
           <Divider style={styles.divider} />
 
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("available")}
-              style={[styles.statusButton, styles.availableButton]}
-              disabled={motorcycle.status === "available"}
-            >
-              Disponível
-            </Button>
+          {actionLoading ? (
+            <ActivityIndicator animating={true} size="large" />
+          ) : (
+            <>
+              <View style={styles.buttonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("available")}
+                  style={[styles.statusButton, styles.availableButton]}
+                  disabled={motorcycle.status === "available"}
+                >
+                  Disponível
+                </Button>
 
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("maintenance")}
-              style={[styles.statusButton, styles.maintenanceButton]}
-              disabled={motorcycle.status === "maintenance"}
-            >
-              Manutenção
-            </Button>
-          </View>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("maintenance")}
+                  style={[styles.statusButton, styles.maintenanceButton]}
+                  disabled={motorcycle.status === "maintenance"}
+                >
+                  Manutenção
+                </Button>
+              </View>
 
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("rented")}
-              style={[styles.statusButton, styles.rentedButton]}
-              disabled={motorcycle.status === "rented"}
-            >
-              Alugada
-            </Button>
+              <View style={styles.buttonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("rented")}
+                  style={[styles.statusButton, styles.rentedButton]}
+                  disabled={motorcycle.status === "rented"}
+                >
+                  Alugada
+                </Button>
 
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("out_of_service")}
-              style={[styles.statusButton, styles.outOfServiceButton]}
-              disabled={motorcycle.status === "out_of_service"}
-            >
-              Fora de Serviço
-            </Button>
-          </View>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("out_of_service")}
+                  style={[styles.statusButton, styles.outOfServiceButton]}
+                  disabled={motorcycle.status === "out_of_service"}
+                >
+                  Fora de Serviço
+                </Button>
+              </View>
+            </>
+          )}
         </Card.Content>
       </Card>
 
@@ -304,6 +328,7 @@ export default function MotorcycleDetailsScreen() {
           onPress={handleDelete}
           style={[styles.button, { backgroundColor: "#d32f2f" }]}
           icon="delete"
+          disabled={actionLoading}
         >
           Excluir
         </Button>
@@ -313,7 +338,7 @@ export default function MotorcycleDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, padding: 16 },
   card: { marginBottom: 16, elevation: 2 },
   title: { fontSize: 24 },
   plate: { fontSize: 16, marginTop: 4 },

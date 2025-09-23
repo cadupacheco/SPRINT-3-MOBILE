@@ -1,74 +1,49 @@
+// src/screens/LoginScreen.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { login } from "../services/auth";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { View, StyleSheet } from "react-native";
+import { TextInput, Button, Text } from "react-native-paper";
+import { useAuth } from "../context/AuthContext";
 
-// Definindo tipos para as props de navegação
-interface LoginScreenProps {
-  navigation: {
-    replace: (screen: string) => void;
-    navigate: (screen: string) => void;
-  };
-}
+export default function LoginScreen({ navigation }: any) {
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-export default function LoginScreen({ navigation }: LoginScreenProps) {
-  const [email, setEmail] = useState<string>("");
-  const [senha, setSenha] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-
-  async function handleLogin(): Promise<void> {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Preencha todos os campos");
-      return;
-    }
+  const handleLogin = async () => {
     setLoading(true);
-    try {
-      await login(email, senha);
-      navigation.replace("Home");
-    } catch (err) {
-      Alert.alert("Erro", "Usuário ou senha inválidos");
-    } finally {
-      setLoading(false);
-    }
-  }
+    setError("");
+    const success = await login(email, password);
+    setLoading(false);
 
-  if (loading) return <LoadingSpinner />;
+    if (!success) {
+      setError("Credenciais inválidas!");
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-      />
+      <TextInput label="Email" value={email} onChangeText={setEmail} style={styles.input} />
+      <TextInput label="Senha" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Senha"
-        secureTextEntry
-        value={senha}
-        onChangeText={setSenha}
-      />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
-      </TouchableOpacity>
+      <Button mode="contained" onPress={handleLogin} loading={loading} style={styles.button}>
+        Entrar
+      </Button>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.link}>Não tem conta? Cadastre-se</Text>
-      </TouchableOpacity>
+      <Button onPress={() => navigation.navigate("Register")}>Não tem conta? Cadastre-se</Button>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10, borderRadius: 5 },
-  button: { backgroundColor: "#6200EE", padding: 15, borderRadius: 5, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "bold" },
-  link: { marginTop: 10, textAlign: "center", color: "#6200EE" },
+  title: { fontSize: 28, marginBottom: 20, textAlign: "center" },
+  input: { marginBottom: 12 },
+  button: { marginTop: 16 },
+  error: { color: "red", textAlign: "center", marginTop: 8 },
 });
