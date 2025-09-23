@@ -1,0 +1,144 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export interface Motorcycle {
+  id: string;
+  model: string;
+  plate: string;
+  status: 'available' | 'maintenance' | 'rented' | 'out_of_service';
+  location: { x: number; y: number };
+  lastUpdate: string;
+  batteryLevel: number;
+  fuelLevel: number;
+  mileage: number;
+  nextMaintenanceDate: string;
+  assignedBranch: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Settings {
+  darkMode: boolean;
+  notifications: boolean;
+  autoRefresh: boolean;
+  refreshInterval: number;
+  language: 'pt-BR' | 'en-US' | 'es-ES';
+  defaultBranch: string;
+}
+
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  isActive: boolean;
+}
+
+// Funcao para validar dados antes de salvar
+const validateMotorcycle = (motorcycle: Partial<Motorcycle>): boolean => {
+  return !!(
+    motorcycle.model &&
+    motorcycle.plate &&
+    motorcycle.status &&
+    motorcycle.location &&
+    motorcycle.location.x !== undefined &&
+    motorcycle.location.y !== undefined
+  );
+};
+
+// Funcoes melhoradas com tratamento de erro
+export const getMotorcycles = async (): Promise<Motorcycle[]> => {
+  try {
+    const data = await AsyncStorage.getItem('motorcycles');
+    if (!data) return [];
+    
+    const motorcycles = JSON.parse(data);
+    return Array.isArray(motorcycles) ? motorcycles : [];
+  } catch (error) {
+    console.error('Erro ao obter motos:', error);
+    return [];
+  }
+};
+
+export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
+  try {
+    if (!validateMotorcycle(motorcycle)) {
+      throw new Error('Dados da moto inválidos');
+    }
+
+    const motorcycles = await getMotorcycles();
+    const now = new Date().toISOString();
+    
+    const newMotorcycle: Motorcycle = {
+      ...motorcycle,
+      id: `moto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: now,
+      updatedAt: now,
+      lastUpdate: now,
+    };
+
+    motorcycles.push(newMotorcycle);
+    await AsyncStorage.setItem('motorcycles', JSON.stringify(motorcycles));
+    
+    return newMotorcycle.id;
+  } catch (error) {
+    console.error('Erro ao salvar moto:', error);
+    return null;
+  }
+};
+
+export const updateMotorcycle = async (id: string, updates: Partial<Motorcycle>): Promise<boolean> => {
+  try {
+    const motorcycles = await getMotorcycles();
+    const index = motorcycles.findIndex(m => m.id === id);
+    
+    if (index === -1) {
+      throw new Error('Moto não encontrada');
+    }
+
+    motorcycles[index] = {
+      ...motorcycles[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+      lastUpdate: new Date().toISOString(),
+    };
+
+    await AsyncStorage.setItem('motorcycles', JSON.stringify(motorcycles));
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar moto:', error);
+    return false;
+  }
+};
+
+export const deleteMotorcycle = async (id: string): Promise<boolean> => {
+  try {
+    const motorcycles = await getMotorcycles();
+    const filteredMotorcycles = motorcycles.filter(m => m.id !== id);
+    
+    await AsyncStorage.setItem('motorcycles', JSON.stringify(filteredMotorcycles));
+    return true;
+  } catch (error) {
+    console.error('Erro ao deletar moto:', error);
+    return false;
+  }
+};
+
+// Funcoes para relatorios e estatsticas
+export const getMotorcycleStatistics = async () => {
+  try {
+    const motorcycles = await getMotorcycles();
+    
+    return {
+      total: motorcycles.length,
+      available: motorcycles.filter(m => m.status === 'available').length,
+      rented: motorcycles.filter(m => m.status === 'rented').length,
+      maintenance: motorcycles.filter(m => m.status === 'maintenance').length,
+      outOfService: motorcycles.filter(m => m.status === 'out_of_service').length,
+      averageBattery: motorcycles.reduce((sum, m) => sum + m.batteryLevel, 0) / motorcycles.length || 0,
+      averageFuel: motorcycles.reduce((sum, m) => sum + m.fuelLevel, 0) / motorcycles.length || 0,
+    };
+  } catch (error) {
+    console.error('Erro ao obter estatísticas:', error);
+    return null;
+  }
+};
