@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Text, Switch, Button, Divider, List } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../context/ThemeContext';
 
 interface Settings {
-  darkMode: boolean;
   notifications: boolean;
   autoRefresh: boolean;
   refreshInterval: number;
 }
 
 export default function SettingsScreen() {
+  const { isDarkTheme, toggleTheme } = useTheme();
   const [settings, setSettings] = useState<Settings>({
-    darkMode: false,
     notifications: true,
     autoRefresh: false,
     refreshInterval: 5,
@@ -81,8 +81,8 @@ export default function SettingsScreen() {
           left={props => <List.Icon {...props} icon="theme-light-dark" />}
           right={() => (
             <Switch
-              value={settings.darkMode}
-              onValueChange={(value) => updateSetting('darkMode', value)}
+              value={isDarkTheme}
+              onValueChange={toggleTheme}
             />
           )}
         />

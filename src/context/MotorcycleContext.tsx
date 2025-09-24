@@ -79,15 +79,33 @@ export const MotorcycleProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const addMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<boolean> => {
     try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      
+      // Verificar se já existe moto com a mesma placa
+      const existingMoto = state.motorcycles.find(m => 
+        m.plate.toUpperCase() === motorcycle.plate.toUpperCase()
+      );
+      
+      if (existingMoto) {
+        dispatch({ type: 'SET_ERROR', payload: 'Já existe uma moto cadastrada com esta placa' });
+        return false;
+      }
+      
       const id = await saveMotorcycle(motorcycle);
       if (id) {
-        await loadMotorcycles(); // Recarregar a lista
+        // Recarregar a lista completa para garantir consistência
+        await loadMotorcycles();
+        dispatch({ type: 'SET_ERROR', payload: null });
         return true;
       }
+      dispatch({ type: 'SET_ERROR', payload: 'Erro ao salvar moto - Verifique se a placa já não está cadastrada' });
       return false;
     } catch (error) {
+      console.error('Erro ao adicionar moto:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Erro ao adicionar moto' });
       return false;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
@@ -106,14 +124,21 @@ export const MotorcycleProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const deleteMotorcycleById = async (id: string): Promise<boolean> => {
     try {
+      dispatch({ type: 'SET_LOADING', payload: true });
       const success = await deleteMotorcycle(id);
       if (success) {
         dispatch({ type: 'DELETE_MOTORCYCLE', payload: id });
+        dispatch({ type: 'SET_ERROR', payload: null });
+        return true;
       }
-      return success;
-    } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Erro ao deletar moto' });
       return false;
+    } catch (error) {
+      console.error('Erro ao deletar moto:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Erro ao deletar moto' });
+      return false;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 

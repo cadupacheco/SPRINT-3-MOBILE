@@ -17,7 +17,7 @@ import {
   useRoute,
 } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 
@@ -85,14 +85,20 @@ export default function MotorcycleDetailsScreen() {
               setActionLoading(true);
               const success = await actions.deleteMotorcycleById(id);
               if (success) {
-                await actions.loadMotorcycles(); // refresh da lista
-                Alert.alert("Sucesso", "Moto excluída com sucesso!");
-                navigation.navigate("Dashboard");
+                // Refresh da lista após exclusão
+                await actions.loadMotorcycles();
+                Alert.alert("Sucesso", "Moto excluída com sucesso!", [
+                  {
+                    text: "OK",
+                    onPress: () => navigation.navigate("Dashboard")
+                  }
+                ]);
               } else {
                 Alert.alert("Erro", "Não foi possível excluir a moto.");
               }
             } catch (error) {
               Alert.alert("Erro", "Falha ao comunicar com a API.");
+              console.error("Erro ao deletar moto:", error);
             } finally {
               setActionLoading(false);
             }

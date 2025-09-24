@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from "react-native";
 import { Button, Text, RadioButton, TextInput, ActivityIndicator } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../navigation/AppNavigator";
+import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 
 type AddMotorcycleNavigationProp = NativeStackNavigationProp<
@@ -13,7 +13,7 @@ type AddMotorcycleNavigationProp = NativeStackNavigationProp<
 
 export default function AddMotorcycleScreen() {
   const navigation = useNavigation<AddMotorcycleNavigationProp>();
-  const { actions } = useMotorcycles();
+  const { actions, state } = useMotorcycles();
 
   // Estados do formulário
   const [model, setModel] = useState("");
@@ -33,7 +33,66 @@ export default function AddMotorcycleScreen() {
     locationY: "",
   });
 
-  // Função de validação
+  // Função para validar placa no formato AAA0A00 (Mercosul) ou ABC-1234 (antigo)
+  const validatePlate = (plateValue: string): boolean => {
+    // Formato Mercosul: AAA0A00
+    const mercosulPattern = /^[A-Z]{3}[0-9]{1}[A-Z]{1}[0-9]{2}$/;
+    // Formato antigo: ABC-1234
+    const oldPattern = /^[A-Z]{3}-[0-9]{4}$/;
+    // Formato antigo sem hífen: ABC1234
+    const oldWithoutHyphen = /^[A-Z]{3}[0-9]{4}$/;
+    
+    return mercosulPattern.test(plateValue) || oldPattern.test(plateValue) || oldWithoutHyphen.test(plateValue);
+  };
+
+  // Função para formatar entrada de placa enquanto digita
+  const formatPlateInput = (text: string): string => {
+    // Remove caracteres especiais exceto hífen
+    const cleaned = text.replace(/[^A-Za-z0-9-]/g, '').toUpperCase();
+    
+    // Se contém hífen, formato antigo ABC-1234
+    if (cleaned.includes('-')) {
+      const parts = cleaned.split('-');
+      let formatted = parts[0].substring(0, 3);
+      if (parts[1]) {
+        formatted += '-' + parts[1].substring(0, 4);
+      }
+      return formatted;
+    }
+    
+    // Formato Mercosul AAA0A00
+    return cleaned.substring(0, 7);
+  };
+
+  // Função para converter coordenadas geográficas em graus decimais
+  const parseCoordinate = (coord: string): number | null => {
+    try {
+      // Regex para capturar graus, minutos, segundos e direção
+      const regex = /(\d+)°\s*(\d+)′\s*(\d+)″\s*([NSEO])/;
+      const match = coord.trim().match(regex);
+      
+      if (!match) {
+        // Se não for formato geográfico, tenta como número decimal
+        const decimal = parseFloat(coord.trim());
+        return isNaN(decimal) ? null : decimal;
+      }
+
+      const [, degrees, minutes, seconds, direction] = match;
+      
+      let decimal = parseInt(degrees) + parseInt(minutes)/60 + parseInt(seconds)/3600;
+      
+      // Aplicar sinal negativo para Sul e Oeste
+      if (direction === 'S' || direction === 'O') {
+        decimal = -decimal;
+      }
+      
+      return decimal;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Função de validação atualizada
   const validateForm = () => {
     let isValid = true;
     const newErrors = { model: "", plate: "", locationX: "", locationY: "" };
@@ -46,24 +105,24 @@ export default function AddMotorcycleScreen() {
     if (!plate.trim()) {
       newErrors.plate = "Placa é obrigatória";
       isValid = false;
-    } else if (!/^[A-Z]{3}\d{4}$/.test(plate)) {
-      newErrors.plate = "Formato inválido (ex: ABC1234)";
+    } else if (!validatePlate(plate)) {
+      newErrors.plate = "Formato inválido (ex: ABC1D23)";
       isValid = false;
     }
 
     if (!locationX.trim()) {
-      newErrors.locationX = "Coordenada X é obrigatória";
+      newErrors.locationX = "Latitude é obrigatória";
       isValid = false;
-    } else if (isNaN(Number(locationX))) {
-      newErrors.locationX = "Coordenada X deve ser numérica";
+    } else if (parseCoordinate(locationX) === null) {
+      newErrors.locationX = "Formato inválido (ex: 23° 32′ 44″ S ou -23.5456)";
       isValid = false;
     }
 
     if (!locationY.trim()) {
-      newErrors.locationY = "Coordenada Y é obrigatória";
+      newErrors.locationY = "Longitude é obrigatória";
       isValid = false;
-    } else if (isNaN(Number(locationY))) {
-      newErrors.locationY = "Coordenada Y deve ser numérica";
+    } else if (parseCoordinate(locationY) === null) {
+      newErrors.locationY = "Formato inválido (ex: 46° 28′ 26″ O ou -46.4739)";
       isValid = false;
     }
 
@@ -73,41 +132,68 @@ export default function AddMotorcycleScreen() {
 
   // Salvar moto
   const handleSaveMotorcycle = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || loading) return;
 
     setLoading(true);
 
-    const newMotorcycle = {
-      model,
-      plate,
-      status,
-      location: {
-        x: Number(locationX),
-        y: Number(locationY),
-      },
-      batteryLevel: Math.floor(Math.random() * 100),
-      fuelLevel: Math.floor(Math.random() * 100),
-      mileage: Math.floor(Math.random() * 50000),
-      nextMaintenanceDate: new Date(
-        Date.now() + 30 * 24 * 60 * 60 * 1000
-      ).toISOString(),
-      assignedBranch: "São Paulo Centro",
-      lastUpdate: new Date().toISOString(),
-    };
+    try {
+      // Converter coordenadas para formato decimal
+      const latitudeDecimal = parseCoordinate(locationX);
+      const longitudeDecimal = parseCoordinate(locationY);
 
-    const success = await actions.addMotorcycle(newMotorcycle);
+      if (latitudeDecimal === null || longitudeDecimal === null) {
+        Alert.alert("Erro", "Coordenadas inválidas");
+        setLoading(false);
+        return;
+      }
 
-    setLoading(false);
-
-    if (success) {
-      Alert.alert("Sucesso", "Moto adicionada com sucesso!", [
-        {
-          text: "OK",
-          onPress: () => navigation.navigate("Home"),
+      const newMotorcycle = {
+        model: model.trim(),
+        plate: plate.trim().toUpperCase(),
+        status,
+        location: {
+          x: latitudeDecimal,
+          y: longitudeDecimal,
         },
-      ]);
-    } else {
-      Alert.alert("Erro", "Não foi possível salvar a moto.");
+        batteryLevel: Math.floor(Math.random() * 100),
+        fuelLevel: Math.floor(Math.random() * 100),
+        mileage: Math.floor(Math.random() * 50000),
+        nextMaintenanceDate: new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        assignedBranch: "São Paulo Centro",
+        lastUpdate: new Date().toISOString(),
+      };
+
+      const success = await actions.addMotorcycle(newMotorcycle);
+
+      if (success) {
+        Alert.alert("Sucesso", "Moto adicionada com sucesso!", [
+          {
+            text: "OK",
+            onPress: () => {
+              // Limpar o formulário
+              setModel("");
+              setPlate("");
+              setStatus("available");
+              setLocationX("");
+              setLocationY("");
+              setErrors({ model: "", plate: "", locationX: "", locationY: "" });
+              
+              // Navegar para o Dashboard
+              navigation.navigate("Dashboard");
+            },
+          },
+        ]);
+      } else {
+        const errorMessage = state.error || "Não foi possível salvar a moto.";
+        Alert.alert("Erro", errorMessage);
+      }
+    } catch (error) {
+      console.error("Erro ao salvar moto:", error);
+      Alert.alert("Erro", "Falha ao salvar a moto.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -127,17 +213,25 @@ export default function AddMotorcycleScreen() {
       />
       {errors.model ? <Text style={styles.errorText}>{errors.model}</Text> : null}
 
+      {/* Placa - Exemplo */}
+      <View style={styles.exampleContainer}>
+        <Text style={styles.exampleTitle}>🚗 Formato da placa:</Text>
+        <Text style={styles.exampleText}>• Nova (Mercosul): "ABC1D23"</Text>
+        <Text style={styles.exampleText}>• Antiga: "ABC-1234"</Text>
+      </View>
+
       {/* Placa */}
       <TextInput
-        label="Placa (ABC1234)"
+        label="Placa"
         value={plate}
-        onChangeText={(text) => setPlate(text.toUpperCase())}
+        onChangeText={setPlate}
         mode="outlined"
         style={styles.input}
         error={!!errors.plate}
         autoCapitalize="characters"
-        maxLength={7}
+        maxLength={8}
         autoComplete="off"
+        placeholder="ABC1D23 ou ABC-1234"
       />
       {errors.plate ? <Text style={styles.errorText}>{errors.plate}</Text> : null}
 
@@ -160,17 +254,22 @@ export default function AddMotorcycleScreen() {
       </RadioButton.Group>
 
       {/* Localização */}
-      <Text style={styles.sectionTitle}>Localização no Pátio</Text>
+      <Text style={styles.sectionTitle}>Localização Geográfica</Text>
+      <View style={styles.exampleContainer}>
+        <Text style={styles.exampleTitle}>📍 Exemplos de formato:</Text>
+        <Text style={styles.exampleText}>• Coordenadas geográficas: "23° 32′ 44″ S"</Text>
+        <Text style={styles.exampleText}>• Graus decimais: "-23.5456"</Text>
+      </View>
       <View style={styles.locationContainer}>
         <View style={styles.locationInput}>
           <TextInput
-            label="Coordenada X"
+            label="Latitude"
             value={locationX}
             onChangeText={setLocationX}
             mode="outlined"
-            keyboardType="numeric"
             error={!!errors.locationX}
             autoComplete="off"
+            placeholder="Ex: 23° 32′ 44″ S"
           />
           {errors.locationX ? (
             <Text style={styles.errorText}>{errors.locationX}</Text>
@@ -179,13 +278,13 @@ export default function AddMotorcycleScreen() {
 
         <View style={styles.locationInput}>
           <TextInput
-            label="Coordenada Y"
+            label="Longitude"
             value={locationY}
             onChangeText={setLocationY}
             mode="outlined"
-            keyboardType="numeric"
             error={!!errors.locationY}
             autoComplete="off"
+            placeholder="Ex: 46° 28′ 26″ O"
           />
           {errors.locationY ? (
             <Text style={styles.errorText}>{errors.locationY}</Text>
@@ -247,6 +346,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
+  helpText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+    fontStyle: "italic",
+  },
   radioContainer: {
     backgroundColor: "white",
     borderRadius: 8,
@@ -268,5 +373,25 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 4,
+  },
+  exampleContainer: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+  },
+  exampleTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2196F3',
+    marginBottom: 8,
+  },
+  exampleText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+    fontFamily: 'monospace',
   },
 });

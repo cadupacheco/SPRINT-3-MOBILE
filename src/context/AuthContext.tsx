@@ -38,17 +38,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await api.post("/auth/login", { email, password });
-      const { token, user } = response.data;
+      // MOCK LOGIN - Para demonstração
+      const mockUsers = [
+        { id: 1, name: "Carlos Pacheco", email: "carlos@ideatec.com", password: "123456" },
+        { id: 2, name: "Pedro Ladeira", email: "pedro@ideatec.com", password: "123456" },
+        { id: 3, name: "João Brito", email: "joao@ideatec.com", password: "123456" },
+        { id: 4, name: "Admin", email: "admin@ideatec.com", password: "admin123" },
+      ];
 
-      await AsyncStorage.setItem("token", token);
-      await AsyncStorage.setItem("user", JSON.stringify(user));
+      // Simular delay da API
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setToken(token);
-      setUser(user);
+      const user = mockUsers.find(u => u.email === email && u.password === password);
+      
+      if (user) {
+        const token = `mock_token_${Date.now()}`;
+        const userData = { id: user.id, name: user.name, email: user.email };
 
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      return true;
+        await AsyncStorage.setItem("token", token);
+        await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+        setToken(token);
+        setUser(userData);
+
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       return false;
     }
@@ -56,7 +72,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
-      await api.post("/auth/register", { name, email, password });
+      // MOCK REGISTER - Para demonstração
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Simular sucesso do cadastro
       return true;
     } catch (error) {
       return false;
