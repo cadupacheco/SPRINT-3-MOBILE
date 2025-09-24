@@ -61,11 +61,16 @@ export const getMotorcycles = async (): Promise<Motorcycle[]> => {
 
 export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
   try {
+    console.log("=== STORAGE: Iniciando criação ===");
+    console.log("Dados da moto:", motorcycle);
+    
     if (!validateMotorcycle(motorcycle)) {
+      console.error('STORAGE: Dados da moto inválidos');
       throw new Error('Dados da moto inválidos');
     }
 
     const motorcycles = await getMotorcycles();
+    console.log("STORAGE: Motos existentes:", motorcycles.length);
     
     // Verificar se já existe uma moto com a mesma placa
     const existingMoto = motorcycles.find(m => 
@@ -73,7 +78,7 @@ export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'create
     );
     
     if (existingMoto) {
-      console.warn('Moto com esta placa já existe:', motorcycle.plate);
+      console.warn('STORAGE: Moto com esta placa já existe:', motorcycle.plate);
       return null;
     }
 
@@ -87,13 +92,15 @@ export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'create
       lastUpdate: now,
     };
 
+    console.log("STORAGE: Nova moto criada com ID:", newMotorcycle.id);
+
     motorcycles.push(newMotorcycle);
     await AsyncStorage.setItem('motorcycles', JSON.stringify(motorcycles));
     
-    console.log('Moto salva com sucesso:', newMotorcycle.id);
+    console.log('STORAGE: Moto salva com sucesso. Total de motos:', motorcycles.length);
     return newMotorcycle.id;
   } catch (error) {
-    console.error('Erro ao salvar moto:', error);
+    console.error('STORAGE: Erro ao salvar moto:', error);
     return null;
   }
 };
@@ -124,20 +131,29 @@ export const updateMotorcycle = async (id: string, updates: Partial<Motorcycle>)
 
 export const deleteMotorcycle = async (id: string): Promise<boolean> => {
   try {
+    console.log("=== STORAGE: Iniciando exclusão ===");
+    console.log("ID para excluir:", id);
+    
     const motorcycles = await getMotorcycles();
+    console.log("Motos antes da exclusão:", motorcycles.length);
+    console.log("Lista de IDs:", motorcycles.map(m => m.id));
+    
     const initialLength = motorcycles.length;
     const filteredMotorcycles = motorcycles.filter(m => m.id !== id);
     
+    console.log("Motos após filtro:", filteredMotorcycles.length);
+    
     if (filteredMotorcycles.length === initialLength) {
-      console.warn('Moto não encontrada para exclusão:', id);
+      console.warn('STORAGE: Moto não encontrada para exclusão:', id);
       return false;
     }
     
     await AsyncStorage.setItem('motorcycles', JSON.stringify(filteredMotorcycles));
-    console.log('Moto deletada com sucesso:', id);
+    console.log('STORAGE: Moto deletada com sucesso:', id);
+    console.log('STORAGE: Nova quantidade de motos:', filteredMotorcycles.length);
     return true;
   } catch (error) {
-    console.error('Erro ao deletar moto:', error);
+    console.error('STORAGE: Erro ao deletar moto:', error);
     return false;
   }
 };

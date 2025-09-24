@@ -24,13 +24,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const loadStorage = async () => {
-      const storagedToken = await AsyncStorage.getItem("token");
-      const storagedUser = await AsyncStorage.getItem("user");
+      try {
+        console.log("AuthContext: Verificando storage...");
+        const storagedToken = await AsyncStorage.getItem("token");
+        const storagedUser = await AsyncStorage.getItem("user");
+        
+        console.log("Token encontrado:", !!storagedToken);
+        console.log("User encontrado:", !!storagedUser);
 
-      if (storagedToken && storagedUser) {
-        setToken(storagedToken);
-        setUser(JSON.parse(storagedUser));
-        api.defaults.headers.common["Authorization"] = `Bearer ${storagedToken}`;
+        if (storagedToken && storagedUser) {
+          console.log("AuthContext: Usuário logado automaticamente");
+          setToken(storagedToken);
+          setUser(JSON.parse(storagedUser));
+          api.defaults.headers.common["Authorization"] = `Bearer ${storagedToken}`;
+        } else {
+          console.log("AuthContext: Nenhum usuário salvo, requer login");
+        }
+      } catch (error) {
+        console.error("AuthContext: Erro ao carregar storage:", error);
       }
     };
     loadStorage();

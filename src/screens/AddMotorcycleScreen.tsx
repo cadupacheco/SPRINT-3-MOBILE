@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { Button, Text, RadioButton, TextInput, ActivityIndicator } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Button, Text, RadioButton, TextInput, ActivityIndicator, Snackbar } from "react-native-paper";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 
@@ -13,7 +13,12 @@ type AddMotorcycleNavigationProp = NativeStackNavigationProp<
 
 export default function AddMotorcycleScreen() {
   const navigation = useNavigation<AddMotorcycleNavigationProp>();
+  const route = useRoute();
   const { actions, state } = useMotorcycles();
+
+  // Verificar se está editando uma moto existente
+  const motorcycleToEdit = (route.params as any)?.motorcycle;
+  const isEditing = !!motorcycleToEdit;
 
   // Estados do formulário
   const [model, setModel] = useState("");
@@ -24,6 +29,19 @@ export default function AddMotorcycleScreen() {
   const [locationX, setLocationX] = useState("");
   const [locationY, setLocationY] = useState("");
   const [loading, setLoading] = useState(false);
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  // Preencher formulário se estiver editando
+  useEffect(() => {
+    if (isEditing && motorcycleToEdit) {
+      setModel(motorcycleToEdit.model || "");
+      setPlate(motorcycleToEdit.plate || "");
+      setStatus(motorcycleToEdit.status || "available");
+      setLocationX(motorcycleToEdit.location?.x?.toString() || "");
+      setLocationY(motorcycleToEdit.location?.y?.toString() || "");
+    }
+  }, [isEditing, motorcycleToEdit]);
 
   // Estados de erro
   const [errors, setErrors] = useState({
@@ -147,7 +165,7 @@ export default function AddMotorcycleScreen() {
         return;
       }
 
-      const newMotorcycle = {
+      const motorcycleData = {
         model: model.trim(),
         plate: plate.trim().toUpperCase(),
         status,
@@ -155,39 +173,69 @@ export default function AddMotorcycleScreen() {
           x: latitudeDecimal,
           y: longitudeDecimal,
         },
-        batteryLevel: Math.floor(Math.random() * 100),
-        fuelLevel: Math.floor(Math.random() * 100),
-        mileage: Math.floor(Math.random() * 50000),
-        nextMaintenanceDate: new Date(
+        batteryLevel: motorcycleToEdit?.batteryLevel || Math.floor(Math.random() * 100),
+        fuelLevel: motorcycleToEdit?.fuelLevel || Math.floor(Math.random() * 100),
+        mileage: motorcycleToEdit?.mileage || Math.floor(Math.random() * 50000),
+        nextMaintenanceDate: motorcycleToEdit?.nextMaintenanceDate || new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
         ).toISOString(),
-        assignedBranch: "São Paulo Centro",
+        assignedBranch: motorcycleToEdit?.assignedBranch || "São Paulo Centro",
         lastUpdate: new Date().toISOString(),
       };
 
-      const success = await actions.addMotorcycle(newMotorcycle);
+      let success = false;
+      let errorMessage = "";
+      
+      if (isEditing) {
+        // Atualizar moto existente
+        console.log("Editando moto ID:", motorcycleToEdit.id);
+        success = await actions.updateMotorcycleById(motorcycleToEdit.id, motorcycleData);
+        errorMessage = "Não foi possível atualizar a moto.";
+      } else {
+        // Criar nova moto
+        console.log("Criando nova moto...");
+        success = await actions.addMotorcycle(motorcycleData);
+        errorMessage = "Não foi possível criar a moto.";
+      }
+
+      console.log("Resultado da operação:", success);
+
+      // Aguardar um momento para garantir que o estado seja atualizado
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       if (success) {
-        Alert.alert("Sucesso", "Moto adicionada com sucesso!", [
-          {
-            text: "OK",
-            onPress: () => {
-              // Limpar o formulário
-              setModel("");
-              setPlate("");
-              setStatus("available");
-              setLocationX("");
-              setLocationY("");
-              setErrors({ model: "", plate: "", locationX: "", locationY: "" });
-              
-              // Navegar para o Dashboard
-              navigation.navigate("Dashboard");
-            },
-          },
-        ]);
+        const message = isEditing ? "✅ Moto atualizada com sucesso!" : "✅ Moto adicionada com sucesso!";
+        console.log("Mostrando mensagem de sucesso:", message);
+        
+        // Mostrar snackbar de sucesso
+        setSnackbarMessage(message);
+        setSnackbarVisible(true);
+        
+        // Aguardar um pouco antes de navegar
+        setTimeout(() => {
+          console.log("Navegando para Dashboard após sucesso");
+          
+          // Limpar o formulário apenas se não estiver editando
+          if (!isEditing) {
+            setModel("");
+            setPlate("");
+            setStatus("available");
+            setLocationX("");
+            setLocationY("");
+            setErrors({ model: "", plate: "", locationX: "", locationY: "" });
+          }
+          
+          // Navegar para o Dashboard e resetar a stack
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Dashboard' }],
+          });
+        }, 2000); // Aguardar 2 segundos para o usuário ler a mensagem
       } else {
-        const errorMessage = state.error || "Não foi possível salvar a moto.";
-        Alert.alert("Erro", errorMessage);
+        const errorMessage = "Erro ao salvar a moto";
+        const finalErrorMessage = state.error || errorMessage;
+        console.log("Mostrando alert de erro:", finalErrorMessage);
+        Alert.alert("❌ Erro", finalErrorMessage, [{ text: "OK" }]);
       }
     } catch (error) {
       console.error("Erro ao salvar moto:", error);
@@ -199,7 +247,9 @@ export default function AddMotorcycleScreen() {
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>Adicionar Nova Moto</Text>
+      <Text style={styles.title}>
+        {isEditing ? "Editar Moto" : "Adicionar Nova Moto"}
+      </Text>
 
       {/* Modelo */}
       <TextInput
@@ -312,11 +362,25 @@ export default function AddMotorcycleScreen() {
           loading={loading}
           disabled={loading}
         >
-          {loading ? "Salvando..." : "Salvar"}
+          {loading 
+            ? (isEditing ? "Atualizando..." : "Salvando...") 
+            : (isEditing ? "Atualizar" : "Salvar")
+          }
         </Button>
       </View>
 
       {loading && <ActivityIndicator animating size="large" />}
+      
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        duration={2000}
+        action={{
+          label: 'OK',
+          onPress: () => setSnackbarVisible(false),
+        }}>
+        {snackbarMessage}
+      </Snackbar>
     </ScrollView>
   );
 }

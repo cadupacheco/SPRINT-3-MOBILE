@@ -44,14 +44,6 @@ export default function MotorcycleDetailsScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const theme = useTheme();
 
-  // Encontrar a moto pelo ID
-  const motorcycle = state.motorcycles.find((m) => m.id === id);
-  
-  console.log("🔍 MotorcycleDetailsScreen - ID recebido:", id);
-  console.log("🔍 MotorcycleDetailsScreen - Moto encontrada:", motorcycle ? `${motorcycle.plate} (${motorcycle.id})` : "NÃO ENCONTRADA");
-  console.log("🔍 MotorcycleDetailsScreen - Total motos no estado:", state.motorcycles.length);
-  console.log("🔍 MotorcycleDetailsScreen - IDs disponíveis:", state.motorcycles.map(m => m.id));
-
   // Função para verificar AsyncStorage
   const checkAsyncStorage = async () => {
     try {
@@ -66,6 +58,14 @@ export default function MotorcycleDetailsScreen() {
     }
   };
 
+  // Encontrar a moto pelo ID
+  const motorcycle = state.motorcycles.find((m) => m.id === id);
+  
+  console.log("🔍 MotorcycleDetailsScreen - ID recebido:", id);
+  console.log("🔍 MotorcycleDetailsScreen - Moto encontrada:", motorcycle ? `${motorcycle.plate} (${motorcycle.id})` : "NÃO ENCONTRADA");
+  console.log("🔍 MotorcycleDetailsScreen - Total motos no estado:", state.motorcycles.length);
+  console.log("🔍 MotorcycleDetailsScreen - IDs disponíveis:", state.motorcycles.map(m => m.id));
+
   useEffect(() => {
     if (state.motorcycles.length > 0) {
       setLoading(false);
@@ -75,22 +75,18 @@ export default function MotorcycleDetailsScreen() {
   const handleStatusChange = async (
     newStatus: "available" | "maintenance" | "rented" | "out_of_service"
   ) => {
-    if (!motorcycle) return;
-
     try {
       setActionLoading(true);
-      await actions.updateMotorcycleById(motorcycle.id, { status: newStatus });
+      await actions.updateMotorcycleById(id, { status: newStatus });
     } catch (error) {
-      console.error("Erro ao atualizar status:", error);
+      Alert.alert("Erro", "Não foi possível alterar o status.");
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleEdit = () => {
-    if (motorcycle) {
-      navigation.navigate("AddMotorcycle", { motorcycle });
-    }
+    navigation.navigate("AddMotorcycle", { motorcycle });
   };
 
   const handleDelete = () => {
@@ -122,19 +118,25 @@ export default function MotorcycleDetailsScreen() {
               
               if (success) {
                 console.log("Exclusão bem-sucedida, recarregando lista...");
+                // Garantir que a lista seja recarregada
                 await actions.loadMotorcycles();
                 
+                // Verificar AsyncStorage APÓS RELOAD
                 console.log("=== APÓS RELOAD ===");
                 await checkAsyncStorage();
                 
+                // Aguardar um momento para garantir consistência
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
                 console.log("Mostrando mensagem de sucesso...");
+                // Mostrar snackbar de sucesso
                 setSnackbarMessage("✅ Moto excluída com sucesso!");
                 setSnackbarVisible(true);
                 
+                // Aguardar um pouco antes de navegar
                 setTimeout(() => {
                   console.log("Navegando para Dashboard após exclusão");
+                  // Resetar navegação para Dashboard
                   navigation.reset({
                     index: 0,
                     routes: [{ name: 'Dashboard' }],
@@ -157,159 +159,175 @@ export default function MotorcycleDetailsScreen() {
     );
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'available': return 'Disponível';
-      case 'rented': return 'Alugada';
-      case 'maintenance': return 'Manutenção';
-      case 'out_of_service': return 'Fora de Serviço';
-      default: return status;
-    }
-  };
-
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'available': return styles.statusAvailable;
-      case 'rented': return styles.statusRented;
-      case 'maintenance': return styles.statusMaintenance;
-      case 'out_of_service': return styles.statusOutOfService;
-      default: return styles.statusAvailable;
+      case "available":
+        return styles.statusAvailable;
+      case "maintenance":
+        return styles.statusMaintenance;
+      case "rented":
+        return styles.statusRented;
+      default:
+        return styles.statusOutOfService;
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "available":
+        return "Disponível";
+      case "maintenance":
+        return "Manutenção";
+      case "rented":
+        return "Alugada";
+      default:
+        return "Fora de Serviço";
+    }
+  };
 
-  if (!motorcycle) {
-    return (
-      <View style={styles.container}>
-        <Text>Moto não encontrada</Text>
-        <Button onPress={() => navigation.goBack()}>
-          Voltar
-        </Button>
-      </View>
-    );
+  if (loading || !motorcycle) {
+    return <LoadingSpinner />;
   }
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Informações da Moto */}
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.title}>{motorcycle.model}</Title>
-          <Text style={styles.plate}>Placa: {motorcycle.plate}</Text>
+          <Paragraph style={styles.plate}>
+            Placa: {motorcycle.plate}
+          </Paragraph>
 
           <View style={styles.statusContainer}>
-            <Text style={styles.statusLabel}>Status:</Text>
-            <Text style={[styles.statusText, getStatusStyle(motorcycle.status)]}>
+            <Text style={styles.statusLabel}>Status atual:</Text>
+            <Text
+              style={[
+                styles.statusText,
+                getStatusStyle(motorcycle.status),
+              ]}
+            >
               {getStatusText(motorcycle.status)}
             </Text>
           </View>
         </Card.Content>
       </Card>
 
-      {/* Localização */}
       <Card style={styles.card}>
         <Card.Content>
-          <Title style={styles.sectionTitle}>Localização</Title>
+          <Title style={styles.sectionTitle}>Informações Técnicas</Title>
+          <Divider style={styles.divider} />
+
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Coordenadas:</Text>
+            <Text style={styles.infoLabel}>Nível da Bateria:</Text>
+            <Text style={styles.infoValue}>{motorcycle.batteryLevel}%</Text>
+          </View>
+          <ProgressBar
+            progress={motorcycle.batteryLevel / 100}
+            color="#4caf50"
+            style={styles.progressBar}
+          />
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Nível de Combustível:</Text>
+            <Text style={styles.infoValue}>{motorcycle.fuelLevel}%</Text>
+          </View>
+          <ProgressBar
+            progress={motorcycle.fuelLevel / 100}
+            color="#2196f3"
+            style={styles.progressBar}
+          />
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Quilometragem:</Text>
             <Text style={styles.infoValue}>
-              {motorcycle.location.x}, {motorcycle.location.y}
+              {motorcycle.mileage.toLocaleString("pt-BR")} km
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Próxima Manutenção:</Text>
+            <Text style={styles.infoValue}>
+              {motorcycle.nextMaintenanceDate
+                ? new Date(motorcycle.nextMaintenanceDate).toLocaleDateString("pt-BR")
+                : "Não agendada"}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Localização:</Text>
+            <Text style={styles.infoValue}>
+              ({motorcycle.location.x}, {motorcycle.location.y})
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Filial:</Text>
+            <Text style={styles.infoValue}>
+              {motorcycle.assignedBranch || "Não informado"}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Última Atualização:</Text>
+            <Text style={styles.infoValue}>
+              {motorcycle.lastUpdate
+                ? new Date(motorcycle.lastUpdate).toLocaleString("pt-BR")
+                : "N/A"}
             </Text>
           </View>
         </Card.Content>
       </Card>
 
-      {/* Informações Técnicas */}
-      <Card style={styles.card}>
-        <Card.Content>
-          <Title style={styles.sectionTitle}>Informações Técnicas</Title>
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Bateria:</Text>
-            <Text style={styles.infoValue}>{motorcycle.batteryLevel}%</Text>
-          </View>
-          <ProgressBar 
-            progress={motorcycle.batteryLevel / 100} 
-            color="#4CAF50" 
-            style={styles.progressBar} 
-          />
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Combustível:</Text>
-            <Text style={styles.infoValue}>{motorcycle.fuelLevel}%</Text>
-          </View>
-          <ProgressBar 
-            progress={motorcycle.fuelLevel / 100} 
-            color="#FF9800" 
-            style={styles.progressBar} 
-          />
-
-          <Divider style={styles.divider} />
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Quilometragem:</Text>
-            <Text style={styles.infoValue}>{motorcycle.mileage} km</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Próxima Manutenção:</Text>
-            <Text style={styles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Filial:</Text>
-            <Text style={styles.infoValue}>{motorcycle.assignedBranch}</Text>
-          </View>
-        </Card.Content>
-      </Card>
-
-      {/* Alterar Status */}
       <Card style={styles.card}>
         <Card.Content>
           <Title style={styles.sectionTitle}>Alterar Status</Title>
-          
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("available")}
-              style={[styles.statusButton, styles.availableButton]}
-              disabled={motorcycle.status === "available"}
-            >
-              Disponível
-            </Button>
+          <Divider style={styles.divider} />
 
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("maintenance")}
-              style={[styles.statusButton, styles.maintenanceButton]}
-              disabled={motorcycle.status === "maintenance"}
-            >
-              Manutenção
-            </Button>
-          </View>
+          {actionLoading ? (
+            <ActivityIndicator animating size="large" />
+          ) : (
+            <View>
+              <View style={styles.buttonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("available")}
+                  style={[styles.statusButton, styles.availableButton]}
+                  disabled={motorcycle.status === "available"}
+                >
+                  Disponível
+                </Button>
 
-          <View style={styles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("rented")}
-              style={[styles.statusButton, styles.rentedButton]}
-              disabled={motorcycle.status === "rented"}
-            >
-              Alugada
-            </Button>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("maintenance")}
+                  style={[styles.statusButton, styles.maintenanceButton]}
+                  disabled={motorcycle.status === "maintenance"}
+                >
+                  Manutenção
+                </Button>
+              </View>
 
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("out_of_service")}
-              style={[styles.statusButton, styles.outOfServiceButton]}
-              disabled={motorcycle.status === "out_of_service"}
-            >
-              Fora de Serviço
-            </Button>
-          </View>
+              <View style={styles.buttonContainer}>
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("rented")}
+                  style={[styles.statusButton, styles.rentedButton]}
+                  disabled={motorcycle.status === "rented"}
+                >
+                  Alugada
+                </Button>
+
+                <Button
+                  mode="contained"
+                  onPress={() => handleStatusChange("out_of_service")}
+                  style={[styles.statusButton, styles.outOfServiceButton]}
+                  disabled={motorcycle.status === "out_of_service"}
+                >
+                  Fora de Serviço
+                </Button>
+              </View>
+            </View>
+          )}
         </Card.Content>
       </Card>
 

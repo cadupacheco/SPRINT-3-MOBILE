@@ -16,6 +16,7 @@ import AddMotorcycleScreen from '../screens/AddMotorcycleScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import UsersScreen from '../screens/UsersScreen';
 import DebugScreen from '../screens/DebugScreen';
+import TestScreen from '../screens/TestScreen';
 import { Motorcycle } from '../utils/storage';
 
 // Tipos para navegação autenticada
@@ -34,6 +35,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Users: undefined;
   Debug: undefined;
+  Test: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -74,7 +76,9 @@ function RootNavigator() {
       <RootStack.Screen 
         name="AddMotorcycle" 
         component={AddMotorcycleScreen} 
-        options={{ title: 'Adicionar Moto' }} 
+        options={({ route }) => ({
+          title: (route.params as any)?.motorcycle ? 'Editar Moto' : 'Adicionar Moto'
+        })}
       />
       <RootStack.Screen 
         name="Settings" 
@@ -90,6 +94,11 @@ function RootNavigator() {
         name="Debug" 
         component={DebugScreen} 
         options={{ title: 'Debug - Limpar Dados' }} 
+      />
+      <RootStack.Screen 
+        name="Test" 
+        component={TestScreen} 
+        options={{ title: 'Teste de Navegação' }} 
       />
     </RootStack.Navigator>
   );
