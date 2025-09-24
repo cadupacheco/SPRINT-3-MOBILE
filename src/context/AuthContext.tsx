@@ -6,6 +6,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -13,7 +14,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -49,34 +50,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // MOCK LOGIN - Para demonstração
-      const mockUsers = [
-        { id: 1, name: "Carlos Pacheco", email: "carlos@ideatec.com", password: "123456" },
-        { id: 2, name: "Pedro Ladeira", email: "pedro@ideatec.com", password: "123456" },
-        { id: 3, name: "João Brito", email: "joao@ideatec.com", password: "123456" },
-        { id: 4, name: "Admin", email: "admin@ideatec.com", password: "admin123" },
-      ];
-
-      // Simular delay da API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const user = mockUsers.find(u => u.email === email && u.password === password);
+      console.log('🔐 AuthContext: Tentativa de login:', { email });
       
-      if (user) {
-        const token = `mock_token_${Date.now()}`;
-        const userData = { id: user.id, name: user.name, email: user.email };
+      // USAR O SISTEMA DE USUÁRIOS LOCAIS
+      const storedUsers = await AsyncStorage.getItem('users');
+      if (storedUsers) {
+        const users = JSON.parse(storedUsers);
+        console.log('👥 AuthContext: Usuários encontrados:', users.length);
+        
+        const emailInput = email.trim().toLowerCase();
+        const passwordInput = password.trim();
+        
+        const user = users.find((u: any) => 
+          u.email.toLowerCase().trim() === emailInput && 
+          u.password.trim() === passwordInput &&
+          u.isActive === true
+        );
+        
+        if (user) {
+          console.log('✅ AuthContext: Usuário encontrado:', user.name);
+          const token = `local_token_${user.id}_${Date.now()}`;
+          const userData = { id: parseInt(user.id), name: user.name, email: user.email, role: user.role };
 
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("user", JSON.stringify(userData));
+          await AsyncStorage.setItem("token", token);
+          await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-        setToken(token);
-        setUser(userData);
+          setToken(token);
+          setUser(userData);
 
-        return true;
+          return true;
+        } else {
+          console.log('❌ AuthContext: Usuário não encontrado ou inativo');
+        }
+      } else {
+        console.log('📭 AuthContext: Nenhum usuário salvo, criando usuários padrão...');
+        
+        // Criar usuários padrão se não existirem
+        const defaultUsers = [
+          {
+            id: '1',
+            name: 'Carlos Admin',
+            email: 'carlos@ideatec.com',
+            password: '123456',
+            role: 'admin',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          },
+          {
+            id: '2', 
+            name: 'Pedro Operador',
+            email: 'pedro@ideatec.com',
+            password: '123456',
+            role: 'operator',
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          },
+        ];
+        
+        await AsyncStorage.setItem('users', JSON.stringify(defaultUsers));
+        console.log('👥 AuthContext: Usuários padrão criados');
+        
+        // Tentar login novamente com usuários padrão
+        const user = defaultUsers.find(u => 
+          u.email.toLowerCase() === email.toLowerCase() && 
+          u.password === password
+        );
+        
+        if (user) {
+          const token = `local_token_${user.id}_${Date.now()}`;
+          const userData = { id: parseInt(user.id), name: user.name, email: user.email, role: user.role };
+
+          await AsyncStorage.setItem("token", token);
+          await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+          setToken(token);
+          setUser(userData);
+
+          return true;
+        }
       }
       
       return false;
     } catch (error) {
+      console.error('💥 AuthContext: Erro no login:', error);
       return false;
     }
   };
@@ -94,11 +150,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("token");
-    await AsyncStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-    delete api.defaults.headers.common["Authorization"];
+    console.log("🔴 LOGOUT - AuthContext: Iniciando logout");
+    try {
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+      setToken(null);
+      setUser(null);
+      delete api.defaults.headers.common["Authorization"];
+      console.log("🔴 LOGOUT - AuthContext: Logout concluído com sucesso");
+    } catch (error) {
+      console.error("🔴 LOGOUT - AuthContext: Erro durante logout:", error);
+    }
   };
 
   return (

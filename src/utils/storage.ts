@@ -134,24 +134,54 @@ export const deleteMotorcycle = async (id: string): Promise<boolean> => {
     console.log("=== STORAGE: Iniciando exclusão ===");
     console.log("ID para excluir:", id);
     
+    // Verificar se o AsyncStorage está acessível
+    const testItem = await AsyncStorage.getItem('test');
+    console.log("AsyncStorage acessível:", testItem !== null || testItem === null);
+    
     const motorcycles = await getMotorcycles();
     console.log("Motos antes da exclusão:", motorcycles.length);
-    console.log("Lista de IDs:", motorcycles.map(m => m.id));
+    console.log("Lista de IDs:", motorcycles.map(m => `${m.id} (${m.plate})`));
+    
+    // Verificar se a moto existe
+    const motoToDelete = motorcycles.find(m => m.id === id);
+    if (!motoToDelete) {
+      console.warn('STORAGE: Moto não encontrada para exclusão:', id);
+      console.warn('STORAGE: IDs disponíveis:', motorcycles.map(m => m.id));
+      return false;
+    }
+    
+    console.log('STORAGE: Moto encontrada:', motoToDelete.plate, motoToDelete.model);
     
     const initialLength = motorcycles.length;
     const filteredMotorcycles = motorcycles.filter(m => m.id !== id);
     
     console.log("Motos após filtro:", filteredMotorcycles.length);
+    console.log("Diferença:", initialLength - filteredMotorcycles.length);
     
     if (filteredMotorcycles.length === initialLength) {
-      console.warn('STORAGE: Moto não encontrada para exclusão:', id);
+      console.error('STORAGE: ERRO - Filtro não funcionou!');
       return false;
     }
     
+    // Fazer backup antes de salvar
+    const backupKey = `motorcycles_backup_${Date.now()}`;
+    await AsyncStorage.setItem(backupKey, JSON.stringify(motorcycles));
+    console.log('STORAGE: Backup criado:', backupKey);
+    
+    // Salvar nova lista
     await AsyncStorage.setItem('motorcycles', JSON.stringify(filteredMotorcycles));
-    console.log('STORAGE: Moto deletada com sucesso:', id);
-    console.log('STORAGE: Nova quantidade de motos:', filteredMotorcycles.length);
-    return true;
+    console.log('STORAGE: Nova lista salva');
+    
+    // Verificar se foi salvo corretamente
+    const verification = await AsyncStorage.getItem('motorcycles');
+    const verifiedMotorcycles = verification ? JSON.parse(verification) : [];
+    console.log('STORAGE: Verificação - motos após save:', verifiedMotorcycles.length);
+    console.log('STORAGE: Verificação - IDs restantes:', verifiedMotorcycles.map((m: any) => m.id));
+    
+    const success = verifiedMotorcycles.length === filteredMotorcycles.length;
+    console.log('STORAGE: Verificação de sucesso:', success);
+    
+    return success;
   } catch (error) {
     console.error('STORAGE: Erro ao deletar moto:', error);
     return false;

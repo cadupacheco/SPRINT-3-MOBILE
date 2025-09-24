@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme as usePaperTheme } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 // Telas de Autenticação
 import LoginScreen from '../screens/LoginScreen';
@@ -51,12 +53,26 @@ function AuthNavigator() {
 }
 
 function RootNavigator() {
+  const theme = usePaperTheme();
+  
   return (
-    <RootStack.Navigator initialRouteName="Dashboard">
+    <RootStack.Navigator 
+      initialRouteName="Dashboard"
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: '#1976d2',
+        },
+        headerTintColor: 'white',
+        headerTitleStyle: {
+          color: 'white',
+        },
+        headerTitleAlign: 'center',
+      }}
+    >
       <RootStack.Screen 
         name="Dashboard" 
         component={DashboardScreen} 
-        options={{ title: 'Dashboard - IdeaTec' }} 
+        options={{ title: 'Motos IdeaTec' }} 
       />
       <RootStack.Screen 
         name="Home" 
@@ -106,9 +122,41 @@ function RootNavigator() {
 
 export default function AppNavigator() {
   const { user } = useAuth();
+  const { isDarkTheme } = useTheme();
+  
+  // Tema de navegação para React Navigation
+  const navigationTheme = {
+    dark: isDarkTheme,
+    colors: {
+      primary: isDarkTheme ? '#64b5f6' : '#1976d2',
+      background: isDarkTheme ? '#121212' : '#f5f5f5',
+      card: isDarkTheme ? '#1e1e1e' : '#ffffff',
+      text: isDarkTheme ? '#e6e6e6' : '#1c1b1f',
+      border: isDarkTheme ? '#333333' : '#d0d7de',
+      notification: isDarkTheme ? '#ff6b6b' : '#ff0000',
+    },
+    fonts: {
+      regular: {
+        fontFamily: 'System',
+        fontWeight: '400' as const,
+      },
+      medium: {
+        fontFamily: 'System',
+        fontWeight: '500' as const,
+      },
+      bold: {
+        fontFamily: 'System',
+        fontWeight: '600' as const,
+      },
+      heavy: {
+        fontFamily: 'System',
+        fontWeight: '700' as const,
+      },
+    },
+  };
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       {user ? <RootNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );

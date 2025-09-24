@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   available: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#1976d2',
   },
   maintenance: {
     backgroundColor: '#ef6c00',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Text,
@@ -46,25 +46,6 @@ export default function MotorcycleDetailsScreen() {
 
   // Encontrar a moto pelo ID
   const motorcycle = state.motorcycles.find((m) => m.id === id);
-  
-  console.log("🔍 MotorcycleDetailsScreen - ID recebido:", id);
-  console.log("🔍 MotorcycleDetailsScreen - Moto encontrada:", motorcycle ? `${motorcycle.plate} (${motorcycle.id})` : "NÃO ENCONTRADA");
-  console.log("🔍 MotorcycleDetailsScreen - Total motos no estado:", state.motorcycles.length);
-  console.log("🔍 MotorcycleDetailsScreen - IDs disponíveis:", state.motorcycles.map(m => m.id));
-
-  // Função para verificar AsyncStorage
-  const checkAsyncStorage = async () => {
-    try {
-      const stored = await AsyncStorage.getItem('motorcycles');
-      const motorcycles = stored ? JSON.parse(stored) : [];
-      console.log("VERIFICAÇÃO AsyncStorage - Total motos:", motorcycles.length);
-      console.log("VERIFICAÇÃO AsyncStorage - IDs:", motorcycles.map((m: any) => m.id));
-      return motorcycles;
-    } catch (error) {
-      console.error("Erro ao verificar AsyncStorage:", error);
-      return [];
-    }
-  };
 
   useEffect(() => {
     if (state.motorcycles.length > 0) {
@@ -93,68 +74,37 @@ export default function MotorcycleDetailsScreen() {
     }
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      "Confirmar exclusão",
-      "Deseja realmente excluir esta moto?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setActionLoading(true);
-              console.log("=== INICIANDO EXCLUSÃO ===");
-              console.log("Tentando deletar moto ID:", id);
-              console.log("Dados da moto:", motorcycle);
-              
-              // Verificar AsyncStorage ANTES
-              console.log("=== ANTES DA EXCLUSÃO ===");
-              await checkAsyncStorage();
-              
-              const success = await actions.deleteMotorcycleById(id);
-              console.log("Resultado da exclusão:", success);
-              
-              // Verificar AsyncStorage DEPOIS
-              console.log("=== DEPOIS DA EXCLUSÃO ===");
-              const motosAposExclusao = await checkAsyncStorage();
-              
-              if (success) {
-                console.log("Exclusão bem-sucedida, recarregando lista...");
-                await actions.loadMotorcycles();
-                
-                console.log("=== APÓS RELOAD ===");
-                await checkAsyncStorage();
-                
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                console.log("Mostrando mensagem de sucesso...");
-                setSnackbarMessage("✅ Moto excluída com sucesso!");
-                setSnackbarVisible(true);
-                
-                setTimeout(() => {
-                  console.log("Navegando para Dashboard após exclusão");
-                  navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'Dashboard' }],
-                  });
-                }, 2000);
-              } else {
-                console.log("Falha na exclusão");
-                Alert.alert("❌ Erro", "Não foi possível excluir a moto.", [{ text: "OK" }]);
-              }
-            } catch (error) {
-              console.error("ERRO na exclusão:", error);
-              Alert.alert("❌ Erro", "Falha ao comunicar com o storage.", [{ text: "OK" }]);
-            } finally {
-              console.log("Finalizando operação de exclusão");
-              setActionLoading(false);
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = async () => {
+    if (!motorcycle) {
+      setSnackbarMessage("Erro: Moto não encontrada!");
+      setSnackbarVisible(true);
+      return;
+    }
+    
+    try {
+      setActionLoading(true);
+      console.log("🔴 DELETE - Excluindo moto:", motorcycle.plate, motorcycle.id);
+      
+      await actions.deleteMotorcycleById(motorcycle.id);
+      
+      setSnackbarMessage("✅ Moto excluída com sucesso!");
+      setSnackbarVisible(true);
+      
+      // Voltar para Dashboard após 1 segundo
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Dashboard' }],
+        });
+      }, 1000);
+      
+    } catch (error) {
+      console.error("🔴 DELETE - Erro:", error);
+      setSnackbarMessage("❌ Erro ao excluir moto");
+      setSnackbarVisible(true);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const getStatusText = (status: string) => {
@@ -214,7 +164,7 @@ export default function MotorcycleDetailsScreen() {
         <Card.Content>
           <Title style={styles.sectionTitle}>Localização</Title>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Coordenadas:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
             <Text style={styles.infoValue}>
               {motorcycle.location.x}, {motorcycle.location.y}
             </Text>
@@ -228,17 +178,17 @@ export default function MotorcycleDetailsScreen() {
           <Title style={styles.sectionTitle}>Informações Técnicas</Title>
           
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Bateria:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Bateria:</Text>
             <Text style={styles.infoValue}>{motorcycle.batteryLevel}%</Text>
           </View>
           <ProgressBar 
             progress={motorcycle.batteryLevel / 100} 
-            color="#4CAF50" 
+            color="#1976d2" 
             style={styles.progressBar} 
           />
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Combustível:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Combustível:</Text>
             <Text style={styles.infoValue}>{motorcycle.fuelLevel}%</Text>
           </View>
           <ProgressBar 
@@ -250,17 +200,17 @@ export default function MotorcycleDetailsScreen() {
           <Divider style={styles.divider} />
           
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Quilometragem:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
             <Text style={styles.infoValue}>{motorcycle.mileage} km</Text>
           </View>
           
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Próxima Manutenção:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
             <Text style={styles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
           </View>
           
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Filial:</Text>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
             <Text style={styles.infoValue}>{motorcycle.assignedBranch}</Text>
           </View>
         </Card.Content>
@@ -312,37 +262,6 @@ export default function MotorcycleDetailsScreen() {
           </View>
         </Card.Content>
       </Card>
-
-      {/* Botão de teste de delete */}
-      <Button
-        mode="outlined"
-        onPress={async () => {
-          console.log("🧪 TESTE DELETE DETAILS - ID:", id);
-          console.log("🧪 TESTE DELETE DETAILS - Moto:", motorcycle);
-          try {
-            const { deleteMotorcycle } = await import('../utils/storage');
-            const result = await deleteMotorcycle(id);
-            console.log("🧪 TESTE DELETE DETAILS - Resultado direto:", result);
-            
-            // Verificar AsyncStorage após delete
-            const stored = await AsyncStorage.getItem('motorcycles');
-            const motorcycles = stored ? JSON.parse(stored) : [];
-            console.log("🧪 TESTE DELETE DETAILS - AsyncStorage após:", motorcycles.length);
-            
-            setSnackbarMessage(`🧪 Teste direto: ${result ? 'SUCESSO' : 'FALHOU'}`);
-            setSnackbarVisible(true);
-            
-            if (result) {
-              await actions.loadMotorcycles();
-            }
-          } catch (error) {
-            console.error("🧪 TESTE DELETE DETAILS - Erro:", error);
-          }
-        }}
-        style={{ margin: 10, backgroundColor: '#FFF3CD', borderColor: '#FFEAA7' }}
-      >
-        🧪 TESTE DELETE DIRETO
-      </Button>
 
       {/* Botões de ação */}
       <View style={styles.bottomButtons}>
@@ -407,7 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-  statusAvailable: { backgroundColor: "#e6f7e6", color: "#2e7d32" },
+  statusAvailable: { backgroundColor: "#e3f2fd", color: "#1976d2" },
   statusMaintenance: { backgroundColor: "#fff3e0", color: "#ef6c00" },
   statusRented: { backgroundColor: "#e3f2fd", color: "#1565c0" },
   statusOutOfService: { backgroundColor: "#ffebee", color: "#d32f2f" },
@@ -418,7 +337,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginTop: 8,
   },
-  infoLabel: { fontSize: 14, color: "#555" },
+  infoLabel: { fontSize: 14 },
   infoValue: { fontSize: 14, fontWeight: "bold" },
   progressBar: { height: 8, borderRadius: 4, marginBottom: 16 },
   divider: { marginVertical: 12 },
@@ -428,7 +347,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   statusButton: { flex: 1, marginHorizontal: 4 },
-  availableButton: { backgroundColor: "#2e7d32" },
+  availableButton: { backgroundColor: "#1976d2" },
   maintenanceButton: { backgroundColor: "#ef6c00" },
   rentedButton: { backgroundColor: "#1565c0" },
   outOfServiceButton: { backgroundColor: "#d32f2f" },

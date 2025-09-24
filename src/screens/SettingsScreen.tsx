@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Text, Switch, Button, Divider, List } from 'react-native-paper';
+import { Text, Switch, Button, Divider, List, useTheme as usePaperTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 
@@ -12,6 +12,7 @@ interface Settings {
 
 export default function SettingsScreen() {
   const { isDarkTheme, toggleTheme } = useTheme();
+  const theme = usePaperTheme();
   const [settings, setSettings] = useState<Settings>({
     notifications: true,
     autoRefresh: false,
@@ -70,8 +71,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Configurações</Text>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Configurações</Text>
       
       <List.Section>
         <List.Subheader>Aparência</List.Subheader>
@@ -143,13 +144,13 @@ export default function SettingsScreen() {
         )}
       </List.Section>
       
-      <View style={styles.dangerZone}>
-        <Text style={styles.dangerTitle}>Zona de Perigo</Text>
+      <View style={[styles.dangerZone, { backgroundColor: theme.colors.errorContainer }]}>
+        <Text style={[styles.dangerTitle, { color: theme.colors.error }]}>Zona de Perigo</Text>
         <Button 
           mode="contained" 
           onPress={handleClearData}
           style={styles.dangerButton}
-          buttonColor="#d32f2f"
+          buttonColor={theme.colors.error}
           icon="delete"
         >
           Limpar Dados de Motos
@@ -157,8 +158,8 @@ export default function SettingsScreen() {
       </View>
       
       <View style={styles.versionContainer}>
-        <Text style={styles.versionText}>Versão 1.0.0</Text>
-        <Text style={styles.copyrightText}>© 2025 Mottu - Gerenciador de Pátio</Text>
+        <Text style={[styles.versionText, { color: theme.colors.onSurfaceVariant }]}>Versão 1.0.0</Text>
+        <Text style={[styles.copyrightText, { color: theme.colors.onSurfaceVariant }]}>© 2025 Mottu - Gerenciador de Pátio</Text>
       </View>
     </ScrollView>
   );
@@ -168,7 +169,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
@@ -185,17 +185,14 @@ const styles = StyleSheet.create({
   dangerZone: {
     marginTop: 32,
     padding: 16,
-    backgroundColor: '#ffebee',
     borderRadius: 8,
   },
   dangerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#d32f2f',
     marginBottom: 16,
   },
   dangerButton: {
-    backgroundColor: '#d32f2f',
   },
   versionContainer: {
     marginTop: 32,
@@ -204,11 +201,9 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
-    color: '#757575',
   },
   copyrightText: {
     fontSize: 12,
-    color: '#9e9e9e',
     marginTop: 4,
   },
 });

@@ -142,25 +142,47 @@ export const MotorcycleProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.log("=== CONTEXT: Iniciando exclusão ===");
       console.log("ID para excluir no Context:", id);
       console.log("Motos no estado antes da exclusão:", state.motorcycles.length);
+      console.log("IDs no estado:", state.motorcycles.map(m => `${m.id} (${m.plate})`));
       
       dispatch({ type: 'SET_LOADING', payload: true });
-      const success = await deleteMotorcycle(id);
       
-      console.log("Resultado do storage:", success);
+      // Verificar se a moto existe no estado
+      const motoNoEstado = state.motorcycles.find(m => m.id === id);
+      if (!motoNoEstado) {
+        console.error("CONTEXT: Moto não encontrada no estado!");
+        dispatch({ type: 'SET_ERROR', payload: 'Moto não encontrada no estado' });
+        return false;
+      }
+      
+      console.log("CONTEXT: Moto encontrada no estado:", motoNoEstado.plate);
+      
+      const success = await deleteMotorcycle(id);
+      console.log("CONTEXT: Resultado do storage:", success);
       
       if (success) {
-        console.log("Disparando DELETE_MOTORCYCLE action");
-        dispatch({ type: 'DELETE_MOTORCYCLE', payload: id });
-        dispatch({ type: 'SET_ERROR', payload: null });
+        console.log("CONTEXT: Storage confirmou sucesso - Atualizando estado");
         
-        // Recarregar a lista após exclusão para garantir consistência
-        console.log("Recarregando lista após exclusão...");
+        // Primeiro atualizar o estado local
+        dispatch({ type: 'DELETE_MOTORCYCLE', payload: id });
+        
+        // Aguardar um pouco para o estado ser processado
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Depois recarregar para garantir consistência
+        console.log("CONTEXT: Recarregando lista após exclusão...");
         await loadMotorcycles();
         
+        // Verificar se realmente foi removido
+        const motosAtuais = state.motorcycles.filter(m => m.id !== id);
+        console.log("CONTEXT: Motos restantes após exclusão:", motosAtuais.length);
+        
+        dispatch({ type: 'SET_ERROR', payload: null });
         return true;
+      } else {
+        console.log("CONTEXT: Storage retornou falha");
+        dispatch({ type: 'SET_ERROR', payload: 'Erro ao deletar moto no storage' });
+        return false;
       }
-      dispatch({ type: 'SET_ERROR', payload: 'Erro ao deletar moto' });
-      return false;
     } catch (error) {
       console.error('CONTEXT: Erro ao deletar moto:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Erro ao deletar moto' });

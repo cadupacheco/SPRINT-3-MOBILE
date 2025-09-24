@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, StyleSheet, FlatList, Alert, ScrollView } from "react-native";
-import { Button, Text, Card, ActivityIndicator, FAB, Menu, IconButton, Snackbar } from "react-native-paper";
+import { View, StyleSheet, FlatList, ScrollView } from "react-native";
+import { Button, Text, Card, ActivityIndicator, FAB, IconButton, Snackbar, useTheme, Dialog, Portal, Paragraph } from "react-native-paper";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import { useAuth } from "../context/AuthContext";
+import { useTheme as useAppTheme } from "../context/ThemeContext";
 
 type DashboardNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -16,11 +17,13 @@ export default function DashboardScreen() {
   const navigation = useNavigation<DashboardNavigationProp>();
   const { state, actions } = useMotorcycles();
   const { logout, user } = useAuth();
+  const theme = useTheme();
+  const { isDarkTheme, toggleTheme } = useAppTheme();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Função para mostrar mensagem de sucesso
   const showSuccessMessage = (message: string) => {
@@ -53,19 +56,29 @@ export default function DashboardScreen() {
   );
 
   const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Deseja sair?",
-      [
-        { text: "Cancelar" },
-        { text: "Sair", onPress: logout },
-      ]
-    );
+    console.log("🔴 LOGOUT - Iniciando processo");
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = async () => {
+    console.log("🔴 LOGOUT - Confirmado, executando logout");
+    setShowLogoutModal(false);
+    try {
+      await logout();
+      console.log("🔴 LOGOUT - Sucesso!");
+    } catch (error) {
+      console.error("🔴 LOGOUT - Erro:", error);
+    }
+  };
+
+  const cancelLogout = () => {
+    console.log("🔴 LOGOUT - Cancelado");
+    setShowLogoutModal(false);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return '#4CAF50';
+      case 'available': return '#1976d2';
       case 'rented': return '#FF9800';
       case 'maintenance': return '#2196F3';
       default: return '#F44336';
@@ -109,138 +122,30 @@ export default function DashboardScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Motos IdeaTec</Text>
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <IconButton 
-              icon="dots-vertical" 
-              onPress={() => setMenuVisible(true)}
-            />
-          }
-        >
-          <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('Users'); }} title="Usuários" />
-          <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('Settings'); }} title="Configurações" />
-          <Menu.Item onPress={() => { setMenuVisible(false); navigation.navigate('Debug'); }} title="Limpar Dados" />
-          <Menu.Item 
-            onPress={() => { 
-              setMenuVisible(false); 
-              showSuccessMessage("💡 Use o botão Logout para fazer login novamente!");
-            }} 
-            title="💡 Novo Login" 
-          />
-          <Menu.Item onPress={() => { setMenuVisible(false); handleLogout(); }} title="Logout" />
-        </Menu>
-      </View>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Header customizado removido para eliminar o espaço */}
 
-            <Text style={styles.welcome}>
+      <Text style={[styles.welcome, { color: theme.colors.onBackground, marginTop: 16 }]}>
         Bem-vindo, {user?.name || 'Usuário'}!
       </Text>
 
       {/* Info de Debug */}
-      <Text style={styles.debugInfo}>
+      <Text style={[styles.debugInfo, { color: theme.colors.onBackground }]}>
         📊 Total de motos: {state.motorcycles.length} | Estado: {refreshing ? "Carregando..." : "OK"}
       </Text>
-
-      {/* Botão de teste de DELETE */}
-      {state.motorcycles.length > 0 && (
-        <Button 
-          mode="outlined" 
-          onPress={async () => {
-            const firstMoto = state.motorcycles[0];
-            console.log("🧪 TESTE DELETE - Tentando deletar primeira moto:", firstMoto.id);
-            
-            try {
-              // Importar a função diretamente do storage
-              const { deleteMotorcycle } = await import('../utils/storage');
-              const result = await deleteMotorcycle(firstMoto.id);
-              console.log("🧪 TESTE DELETE - Resultado direto do storage:", result);
-              
-              // Verificar o que tem no AsyncStorage agora
-              const AsyncStorage = await import('@react-native-async-storage/async-storage');
-              const stored = await AsyncStorage.default.getItem('motorcycles');
-              const motorcycles = stored ? JSON.parse(stored) : [];
-              console.log("🧪 TESTE DELETE - AsyncStorage após delete:", motorcycles.length, "motos");
-              
-              showSuccessMessage(`🧪 Delete direto: ${result ? 'SUCESSO' : 'FALHOU'} - Restam ${motorcycles.length} motos`);
-              
-              // Recarregar lista
-              await actions.loadMotorcycles();
-              
-            } catch (error) {
-              console.error("🧪 TESTE DELETE - Erro:", error);
-              showSuccessMessage("🧪 Delete direto: ERRO - " + error);
-            }
-          }}
-          style={{ margin: 10 }}
-        >
-          🧪 TESTE DELETE DIRETO
-        </Button>
-      )}
-
-      {/* Botão para verificar AsyncStorage */}
-      <Button 
-        mode="outlined" 
-        onPress={async () => {
-          try {
-            const AsyncStorage = await import('@react-native-async-storage/async-storage');
-            const stored = await AsyncStorage.default.getItem('motorcycles');
-            const motorcycles = stored ? JSON.parse(stored) : [];
-            console.log("📱 VERIFICAÇÃO AsyncStorage:");
-            console.log("Total de motos no storage:", motorcycles.length);
-            console.log("IDs das motos:", motorcycles.map((m: any) => `${m.id} (${m.plate})`));
-            console.log("Motos completas:", motorcycles);
-            
-            showSuccessMessage(`📱 AsyncStorage: ${motorcycles.length} motos encontradas`);
-          } catch (error) {
-            console.error("📱 ERRO ao verificar AsyncStorage:", error);
-            showSuccessMessage("📱 ERRO ao verificar AsyncStorage");
-          }
-        }}
-        style={{ margin: 10, marginTop: 5 }}
-      >
-        📱 VERIFICAR ASYNCSTORAGE
-      </Button>
-
-      {/* Botão de teste via Context */}
-      {state.motorcycles.length > 0 && (
-        <Button 
-          mode="outlined" 
-          onPress={async () => {
-            const firstMoto = state.motorcycles[0];
-            console.log("🎯 TESTE CONTEXT - Tentando deletar via Context:", firstMoto.id);
-            
-            try {
-              const result = await actions.deleteMotorcycleById(firstMoto.id);
-              console.log("🎯 TESTE CONTEXT - Resultado:", result);
-              
-              showSuccessMessage(`🎯 Delete via Context: ${result ? 'SUCESSO' : 'FALHOU'}`);
-              
-            } catch (error) {
-              console.error("🎯 TESTE CONTEXT - Erro:", error);
-              showSuccessMessage("🎯 Delete via Context: ERRO");
-            }
-          }}
-          style={{ margin: 10, marginTop: 5 }}
-        >
-          🎯 TESTE DELETE VIA CONTEXT
-        </Button>
-      )}
 
       {/* Content */}
       {refreshing ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" />
-          <Text>Carregando...</Text>
+          <Text style={[{ color: theme.colors.onBackground, textAlign: 'center', marginTop: 16, fontSize: 16 }]}>
+            Carregando...
+          </Text>
         </View>
       ) : state.motorcycles.length === 0 ? (
         <ScrollView contentContainerStyle={styles.empty}>
-          <Text style={styles.emptyText}>Nenhuma moto cadastrada</Text>
-          <Text style={styles.emptySubText}>Toque em + para adicionar</Text>
+          <Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>Nenhuma moto cadastrada</Text>
+          <Text style={[styles.emptySubText, { color: theme.colors.onSurfaceVariant }]}>Toque em + para adicionar</Text>
         </ScrollView>
       ) : (
         <FlatList
@@ -254,11 +159,32 @@ export default function DashboardScreen() {
       )}
 
       {/* FAB */}
-            <FAB
+      <FAB
         style={styles.fab}
         icon="plus"
         onPress={() => navigation.navigate("AddMotorcycle")}
       />
+      
+      {/* Modal de Confirmação de Logout */}
+      <Portal>
+        <Dialog visible={showLogoutModal} onDismiss={cancelLogout}>
+          <Dialog.Title>Confirmação de Logout</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>Deseja realmente sair do aplicativo?</Paragraph>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={cancelLogout}>Cancelar</Button>
+            <Button 
+              mode="contained" 
+              onPress={confirmLogout}
+              buttonColor={theme.colors.error}
+              style={{ marginLeft: 8 }}
+            >
+              Sair
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       
       <Snackbar
         visible={snackbarVisible}
@@ -277,41 +203,56 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    paddingTop: 0,
+    marginTop: 0,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    elevation: 0,
+    shadowOpacity: 0,
+    position: 'absolute',
+    top: -10,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+    borderBottomWidth: 0,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    flex: 1,
+    textAlign: 'center',
   },
   welcome: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     padding: 16,
-    color: '#666',
+    fontWeight: '600',
   },
   debugInfo: {
     fontSize: 12,
     textAlign: 'center',
-    color: '#999',
     fontStyle: 'italic',
-    marginBottom: 10,
+    marginBottom: 16,
+    paddingHorizontal: 16,
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 40,
   },
   empty: {
     flex: 1,
@@ -320,15 +261,15 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   emptySubText: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 16,
     textAlign: 'center',
+    marginBottom: 8,
   },
   list: {
     flex: 1,
@@ -336,7 +277,6 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 12,
-    backgroundColor: 'white',
   },
   row: {
     flexDirection: 'row',

@@ -15,7 +15,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   const percentage = Math.min(100, Math.max(0, (value / maxValue) * 100));
   
   const getBarColor = () => {
-    if (percentage > 70) return '#4caf50';
+    if (percentage > 70) return '#1976d2';
     if (percentage > 30) return '#ff9800';
     return '#f44336';
   };

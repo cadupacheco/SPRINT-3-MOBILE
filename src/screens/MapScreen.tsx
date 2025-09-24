@@ -173,7 +173,7 @@ export default function MapScreen() {
                 left: motorcycle.location.x,
                 top: motorcycle.location.y,
                 backgroundColor: 
-                  motorcycle.status === 'available' ? '#4caf50' :
+                  motorcycle.status === 'available' ? '#1976d2' :
                   motorcycle.status === 'maintenance' ? '#ff9800' : '#2196f3'
               }
             ]}
@@ -207,7 +207,7 @@ export default function MapScreen() {
       <View style={styles.legendContainer}>
         <Text style={styles.legendTitle}>Legenda:</Text>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#4caf50' }]} />
+          <View style={[styles.legendDot, { backgroundColor: '#1976d2' }]} />
           <Text>Disponível</Text>
         </View>
         <View style={styles.legendItem}>
