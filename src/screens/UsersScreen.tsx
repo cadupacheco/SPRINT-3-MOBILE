@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, Alert } from 'react-native';
+import { View, FlatList, Alert } from 'react-native';
 import { Card, Text, FAB, Button, IconButton, Menu, Dialog, Portal, TextInput, HelperText, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/UsersScreen.styles';
 
 interface User {
   id: string;
@@ -280,59 +281,14 @@ export default function UsersScreen() {
     }
   };
 
-  const debugAsyncStorage = async () => {
-    try {
-      const storedUsers = await AsyncStorage.getItem('users');
-      if (storedUsers) {
-        const users = JSON.parse(storedUsers);
-        console.log('🐛 DEBUG - Usuários no AsyncStorage:', users);
-        Alert.alert(
-          'Debug - AsyncStorage', 
-          `Usuários encontrados: ${users.length}\n\n${users.map((u: any, i: number) => 
-            `${i+1}. ${u.name}\nEmail: ${u.email}\nSenha: ${u.password}\nAtivo: ${u.isActive ? 'Sim' : 'Não'}`
-          ).join('\n\n')}`
-        );
-      } else {
-        Alert.alert('Debug', 'Nenhum usuário encontrado no AsyncStorage');
-      }
-    } catch (error) {
-      console.error('Erro ao ler AsyncStorage:', error);
-      Alert.alert('Erro', 'Erro ao ler dados salvos');
-    }
-  };
-
-  const clearAsyncStorage = async () => {
-    Alert.alert(
-      'Limpar Dados',
-      'Tem certeza que deseja limpar todos os usuários salvos?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Limpar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem('users');
-              setUsers([]);
-              Alert.alert('Sucesso', 'Dados limpos com sucesso!');
-            } catch (error) {
-              console.error('Erro ao limpar AsyncStorage:', error);
-              Alert.alert('Erro', 'Erro ao limpar dados');
-            }
-          },
-        },
-      ],
-    );
-  };
-
   const renderUser = ({ item }: { item: User }) => (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    <Card style={[componentStyles.card, { backgroundColor: theme.colors.surface }]}>
       <Card.Content>
-        <View style={styles.cardHeader}>
-          <View style={styles.userInfo}>
-            <Text style={[styles.userName, { color: theme.colors.onSurface }]}>{item.name}</Text>
-            <Text style={[styles.userEmail, { color: theme.colors.onSurfaceVariant }]}>{item.email}</Text>
-            <Text style={[styles.userRole, { color: theme.colors.primary }]}>
+        <View style={componentStyles.cardHeader}>
+          <View style={componentStyles.userInfo}>
+            <Text style={[componentStyles.userName, { color: theme.colors.onSurface }]}>{item.name}</Text>
+            <Text style={[componentStyles.userEmail, { color: theme.colors.onSurfaceVariant }]}>{item.email}</Text>
+            <Text style={[componentStyles.userRole, { color: theme.colors.primary }]}>
               {item.role === 'admin' ? 'Administrador' : 'Operador'}
             </Text>
           </View>
@@ -372,9 +328,9 @@ export default function UsersScreen() {
             />
           </Menu>
         </View>
-        <View style={styles.statusContainer}>
+        <View style={componentStyles.statusContainer}>
           <Text style={[
-            styles.statusText,
+            componentStyles.statusText,
             { color: item.isActive ? '#1976d2' : '#f44336' }
           ]}>
             {item.isActive ? 'Ativo' : 'Inativo'}
@@ -385,34 +341,12 @@ export default function UsersScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Gerenciar Usuários</Text>
-      
-      {/* Botões de Debug */}
-      <View style={styles.debugContainer}>
-        <Button 
-          mode="outlined" 
-          onPress={debugAsyncStorage}
-          style={styles.debugButton}
-          compact
-        >
-          Debug Storage
-        </Button>
-        <Button 
-          mode="outlined" 
-          onPress={clearAsyncStorage}
-          style={styles.debugButton}
-          compact
-          buttonColor="red"
-          textColor="white"
-        >
-          Limpar Dados
-        </Button>
-      </View>
+    <View style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[componentStyles.title, { color: theme.colors.onBackground }]}>Gerenciar Usuários</Text>
       
       {users.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Nenhum usuário cadastrado</Text>
+        <View style={componentStyles.emptyContainer}>
+          <Text style={[componentStyles.emptyText, { color: theme.colors.onSurfaceVariant }]}>Nenhum usuário cadastrado</Text>
         </View>
       ) : (
         <FlatList
@@ -424,7 +358,7 @@ export default function UsersScreen() {
       )}
 
       <FAB
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        style={[componentStyles.fab, { backgroundColor: theme.colors.primary }]}
         icon="account-plus"
         label="Novo Usuário"
         onPress={() => setShowCreateModal(true)}
@@ -439,7 +373,7 @@ export default function UsersScreen() {
               label="Nome completo *"
               value={newUserName}
               onChangeText={setNewUserName}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
             />
             
@@ -447,7 +381,7 @@ export default function UsersScreen() {
               label="Email *"
               value={newUserEmail}
               onChangeText={setNewUserEmail}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -457,7 +391,7 @@ export default function UsersScreen() {
               label="Senha *"
               value={newUserPassword}
               onChangeText={setNewUserPassword}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
               secureTextEntry={!showCreatePassword}
               placeholder="Mínimo 6 caracteres"
@@ -469,19 +403,19 @@ export default function UsersScreen() {
               }
             />
 
-            <Text style={styles.roleLabel}>Tipo de usuário:</Text>
-            <View style={styles.roleButtons}>
+            <Text style={componentStyles.roleLabel}>Tipo de usuário:</Text>
+            <View style={componentStyles.roleButtons}>
               <Button
                 mode={newUserRole === 'operator' ? 'contained' : 'outlined'}
                 onPress={() => setNewUserRole('operator')}
-                style={styles.roleButton}
+                style={componentStyles.roleButton}
               >
                 Operador
               </Button>
               <Button
                 mode={newUserRole === 'admin' ? 'contained' : 'outlined'}
                 onPress={() => setNewUserRole('admin')}
-                style={styles.roleButton}
+                style={componentStyles.roleButton}
               >
                 Administrador
               </Button>
@@ -513,7 +447,7 @@ export default function UsersScreen() {
               label="Nome completo *"
               value={editUserName}
               onChangeText={setEditUserName}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
             />
             
@@ -521,7 +455,7 @@ export default function UsersScreen() {
               label="Email *"
               value={editUserEmail}
               onChangeText={setEditUserEmail}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -531,7 +465,7 @@ export default function UsersScreen() {
               label="Senha *"
               value={editUserPassword}
               onChangeText={setEditUserPassword}
-              style={styles.input}
+              style={componentStyles.input}
               mode="outlined"
               secureTextEntry={!showEditPassword}
               placeholder="Mínimo 6 caracteres"
@@ -543,19 +477,19 @@ export default function UsersScreen() {
               }
             />
 
-            <Text style={styles.roleLabel}>Tipo de usuário:</Text>
-            <View style={styles.roleButtons}>
+            <Text style={componentStyles.roleLabel}>Tipo de usuário:</Text>
+            <View style={componentStyles.roleButtons}>
               <Button
                 mode={editUserRole === 'operator' ? 'contained' : 'outlined'}
                 onPress={() => setEditUserRole('operator')}
-                style={styles.roleButton}
+                style={componentStyles.roleButton}
               >
                 Operador
               </Button>
               <Button
                 mode={editUserRole === 'admin' ? 'contained' : 'outlined'}
                 onPress={() => setEditUserRole('admin')}
-                style={styles.roleButton}
+                style={componentStyles.roleButton}
               >
                 Administrador
               </Button>
@@ -582,88 +516,3 @@ export default function UsersScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  card: {
-    marginBottom: 12,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  userRole: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  statusContainer: {
-    marginTop: 8,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 100, // Aumentado para ficar acima do copyright
-  },
-  input: {
-    marginBottom: 16,
-  },
-  roleLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    marginTop: 8,
-  },
-  roleButtons: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  roleButton: {
-    flex: 1,
-  },
-  debugContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-    justifyContent: 'space-around',
-  },
-  debugButton: {
-    flex: 1,
-  },
-});

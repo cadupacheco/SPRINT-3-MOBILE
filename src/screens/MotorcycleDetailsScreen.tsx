@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Text,
@@ -23,6 +23,7 @@ import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/MotorcycleDetailsScreen.styles';
 
 type MotorcycleDetailsRouteProp = RouteProp<
   RootStackParamList,
@@ -120,11 +121,11 @@ export default function MotorcycleDetailsScreen() {
 
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'available': return styles.statusAvailable;
-      case 'rented': return styles.statusRented;
-      case 'maintenance': return styles.statusMaintenance;
-      case 'out_of_service': return styles.statusOutOfService;
-      default: return styles.statusAvailable;
+      case 'available': return componentStyles.statusAvailable;
+      case 'rented': return componentStyles.statusRented;
+      case 'maintenance': return componentStyles.statusMaintenance;
+      case 'out_of_service': return componentStyles.statusOutOfService;
+      default: return componentStyles.statusAvailable;
     }
   };
 
@@ -134,7 +135,7 @@ export default function MotorcycleDetailsScreen() {
 
   if (!motorcycle) {
     return (
-      <View style={styles.container}>
+      <View style={componentStyles.container}>
         <Text>Moto não encontrada</Text>
         <Button onPress={() => navigation.goBack()}>
           Voltar
@@ -144,16 +145,16 @@ export default function MotorcycleDetailsScreen() {
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
       {/* Informações da Moto */}
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
-          <Title style={styles.title}>{motorcycle.model}</Title>
-          <Text style={styles.plate}>Placa: {motorcycle.plate}</Text>
+          <Title style={componentStyles.title}>{motorcycle.model}</Title>
+          <Text style={componentStyles.plate}>Placa: {motorcycle.plate}</Text>
 
-          <View style={styles.statusContainer}>
-            <Text style={styles.statusLabel}>Status:</Text>
-            <Text style={[styles.statusText, getStatusStyle(motorcycle.status)]}>
+          <View style={componentStyles.statusContainer}>
+            <Text style={componentStyles.statusLabel}>Status:</Text>
+            <Text style={[componentStyles.statusText, getStatusStyle(motorcycle.status)]}>
               {getStatusText(motorcycle.status)}
             </Text>
           </View>
@@ -161,12 +162,12 @@ export default function MotorcycleDetailsScreen() {
       </Card>
 
       {/* Localização */}
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
-          <Title style={styles.sectionTitle}>Localização</Title>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
-            <Text style={styles.infoValue}>
+          <Title style={componentStyles.sectionTitle}>Localização</Title>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
+            <Text style={componentStyles.infoValue}>
               {motorcycle.location.x}, {motorcycle.location.y}
             </Text>
           </View>
@@ -174,56 +175,56 @@ export default function MotorcycleDetailsScreen() {
       </Card>
 
       {/* Informações Técnicas */}
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
-          <Title style={styles.sectionTitle}>Informações Técnicas</Title>
+          <Title style={componentStyles.sectionTitle}>Informações Técnicas</Title>
           
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Bateria:</Text>
-            <Text style={styles.infoValue}>{motorcycle.batteryLevel}%</Text>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Bateria:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.batteryLevel}%</Text>
           </View>
           <ProgressBar 
             progress={motorcycle.batteryLevel / 100} 
             color="#1976d2" 
-            style={styles.progressBar} 
+            style={componentStyles.progressBar} 
           />
 
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Combustível:</Text>
-            <Text style={styles.infoValue}>{motorcycle.fuelLevel}%</Text>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Combustível:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.fuelLevel}%</Text>
           </View>
           <ProgressBar 
             progress={motorcycle.fuelLevel / 100} 
             color="#FF9800" 
-            style={styles.progressBar} 
+            style={componentStyles.progressBar} 
           />
 
-          <Divider style={styles.divider} />
+          <Divider style={componentStyles.divider} />
 
           {motorcycle.technicalInfo && (
             <>
-              <View style={styles.infoRow}>
-                <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>🔋 Dados Técnicos Editáveis:</Text>
+              <View style={componentStyles.infoRow}>
+                <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>🔋 Dados Técnicos Editáveis:</Text>
               </View>
-              <Text style={[styles.technicalInfoText, { color: theme.colors.onSurface }]}>
+              <Text style={[componentStyles.technicalInfoText, { color: theme.colors.onSurface }]}>
                 {motorcycle.technicalInfo}
               </Text>
-              <Divider style={styles.divider} />
+              <Divider style={componentStyles.divider} />
             </>
           )}
         </Card.Content>
       </Card>
 
       {/* Alterar Status */}
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
-          <Title style={styles.sectionTitle}>Alterar Status</Title>
+          <Title style={componentStyles.sectionTitle}>Alterar Status</Title>
           
-          <View style={styles.buttonContainer}>
+          <View style={componentStyles.buttonContainer}>
             <Button
               mode="contained"
               onPress={() => handleStatusChange("available")}
-              style={[styles.statusButton, styles.availableButton]}
+              style={[componentStyles.statusButton, componentStyles.availableButton]}
               disabled={motorcycle.status === "available"}
             >
               Disponível
@@ -232,18 +233,18 @@ export default function MotorcycleDetailsScreen() {
             <Button
               mode="contained"
               onPress={() => handleStatusChange("maintenance")}
-              style={[styles.statusButton, styles.maintenanceButton]}
+              style={[componentStyles.statusButton, componentStyles.maintenanceButton]}
               disabled={motorcycle.status === "maintenance"}
             >
               Manutenção
             </Button>
           </View>
 
-          <View style={styles.buttonContainer}>
+          <View style={componentStyles.buttonContainer}>
             <Button
               mode="contained"
               onPress={() => handleStatusChange("rented")}
-              style={[styles.statusButton, styles.rentedButton]}
+              style={[componentStyles.statusButton, componentStyles.rentedButton]}
               disabled={motorcycle.status === "rented"}
             >
               Alugada
@@ -252,7 +253,7 @@ export default function MotorcycleDetailsScreen() {
             <Button
               mode="contained"
               onPress={() => handleStatusChange("out_of_service")}
-              style={[styles.statusButton, styles.outOfServiceButton]}
+              style={[componentStyles.statusButton, componentStyles.outOfServiceButton]}
               disabled={motorcycle.status === "out_of_service"}
             >
               Fora de Serviço
@@ -262,33 +263,33 @@ export default function MotorcycleDetailsScreen() {
       </Card>
 
       {/* Informações Adicionais */}
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
-          <Title style={styles.sectionTitle}>Informações Adicionais</Title>
+          <Title style={componentStyles.sectionTitle}>Informações Adicionais</Title>
           
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
-            <Text style={styles.infoValue}>{motorcycle.mileage} km</Text>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.mileage} km</Text>
           </View>
           
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
-            <Text style={styles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
           </View>
           
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
-            <Text style={styles.infoValue}>{motorcycle.assignedBranch}</Text>
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.assignedBranch}</Text>
           </View>
         </Card.Content>
       </Card>
 
       {/* Botões de ação */}
-      <View style={styles.bottomButtons}>
+      <View style={componentStyles.bottomButtons}>
         <Button
           mode="outlined"
           onPress={() => navigation.goBack()}
-          style={styles.button}
+          style={componentStyles.button}
           icon="arrow-left"
         >
           Voltar
@@ -297,7 +298,7 @@ export default function MotorcycleDetailsScreen() {
         <Button
           mode="contained"
           onPress={handleEdit}
-          style={styles.button}
+          style={componentStyles.button}
           icon="pencil"
         >
           Editar
@@ -306,7 +307,7 @@ export default function MotorcycleDetailsScreen() {
         <Button
           mode="contained"
           onPress={handleDelete}
-          style={[styles.button, { backgroundColor: "#d32f2f" }]}
+          style={[componentStyles.button, { backgroundColor: "#d32f2f" }]}
           icon="delete"
           disabled={actionLoading}
         >
@@ -329,66 +330,3 @@ export default function MotorcycleDetailsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  card: { marginBottom: 16, elevation: 2 },
-  title: { fontSize: 24 },
-  plate: { fontSize: 16, marginTop: 4 },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  statusLabel: { fontSize: 16, marginRight: 8 },
-  statusText: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  statusAvailable: { backgroundColor: "#e3f2fd", color: "#1976d2" },
-  statusMaintenance: { backgroundColor: "#fff3e0", color: "#ef6c00" },
-  statusRented: { backgroundColor: "#e3f2fd", color: "#1565c0" },
-  statusOutOfService: { backgroundColor: "#ffebee", color: "#d32f2f" },
-  sectionTitle: { fontSize: 18, marginBottom: 12 },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
-    marginTop: 8,
-  },
-  infoLabel: { fontSize: 14 },
-  infoValue: { fontSize: 14, fontWeight: "bold" },
-  progressBar: { height: 8, borderRadius: 4, marginBottom: 16 },
-  divider: { marginVertical: 12 },
-  technicalInfoText: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 8,
-    marginBottom: 4,
-    padding: 12,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#1976d2',
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  statusButton: { flex: 1, marginHorizontal: 4 },
-  availableButton: { backgroundColor: "#4CAF50" },
-  maintenanceButton: { backgroundColor: "#ef6c00" },
-  rentedButton: { backgroundColor: "#1565c0" },
-  outOfServiceButton: { backgroundColor: "#d32f2f" },
-  bottomButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  button: { flex: 1, marginHorizontal: 4 },
-});

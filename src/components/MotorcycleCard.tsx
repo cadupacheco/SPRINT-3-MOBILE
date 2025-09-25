@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { Card, Title, Paragraph } from 'react-native-paper';
 import StatusBadge from './StatusBadge';
+import { styles as componentStyles } from '../styles/components/MotorcycleCard.styles';
 
 interface MotorcycleCardProps {
   id: string;
@@ -20,7 +21,7 @@ const MotorcycleCard: React.FC<MotorcycleCardProps> = ({
 }) => {
   return (
     <TouchableOpacity onPress={() => onPress(id)}>
-      <Card style={styles.card}>
+      <Card style={componentStyles.card}>
         <Card.Content>
           <Title>{model}</Title>
           <Paragraph>Placa: {plate}</Paragraph>
@@ -30,12 +31,5 @@ const MotorcycleCard: React.FC<MotorcycleCardProps> = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: 12,
-    elevation: 2,
-  },
-});
 
 export default MotorcycleCard;

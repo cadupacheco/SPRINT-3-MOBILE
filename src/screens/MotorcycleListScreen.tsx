@@ -1,9 +1,10 @@
 // src/screens/MotorcycleListScreen.tsx
 import React, { useEffect } from "react";
-import { View, FlatList, StyleSheet, Alert } from "react-native";
+import { View, FlatList, Alert } from "react-native";
 import { Button, Card, Text, IconButton, ActivityIndicator } from "react-native-paper";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/MotorcycleListScreen.styles';
 
 export default function MotorcycleListScreen({ navigation }: any) {
   const { state, actions } = useMotorcycles();
@@ -42,7 +43,7 @@ export default function MotorcycleListScreen({ navigation }: any) {
 
   if (state.loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[componentStyles.container, componentStyles.centered]}>
         <ActivityIndicator size="large" />
         <Text style={{ marginTop: 16 }}>Carregando motocicletas...</Text>
       </View>
@@ -50,17 +51,17 @@ export default function MotorcycleListScreen({ navigation }: any) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={componentStyles.container}>
       <FlatList
         data={state.motorcycles}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Card style={styles.card}>
+          <Card style={componentStyles.card}>
             <Card.Title 
               title={item.model} 
               subtitle={`Placa: ${item.plate}`}
               right={(props) => (
-                <View style={styles.cardActions}>
+                <View style={componentStyles.cardActions}>
                   <IconButton
                     icon="pencil"
                     onPress={() => navigation.navigate("MotorcycleDetails", { id: item.id })}
@@ -83,7 +84,7 @@ export default function MotorcycleListScreen({ navigation }: any) {
           </Card>
         )}
         ListEmptyComponent={() => (
-          <View style={styles.centered}>
+          <View style={componentStyles.centered}>
             <Text>Nenhuma motocicleta encontrada</Text>
           </View>
         )}
@@ -91,7 +92,7 @@ export default function MotorcycleListScreen({ navigation }: any) {
 
       <Button 
         mode="contained" 
-        style={styles.addButton} 
+        style={componentStyles.addButton} 
         onPress={() => navigation.navigate("AddMotorcycle")}
       >
         + Adicionar Moto
@@ -101,25 +102,3 @@ export default function MotorcycleListScreen({ navigation }: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    padding: 16 
-  },
-  card: { 
-    marginBottom: 12 
-  },
-  addButton: { 
-    marginTop: 12,
-    marginBottom: 24
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  cardActions: {
-    flexDirection: 'row'
-  }
-});

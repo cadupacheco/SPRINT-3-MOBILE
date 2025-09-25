@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, StyleSheet, FlatList, ScrollView } from "react-native";
+import { View, FlatList, ScrollView } from "react-native";
 import { Button, Text, Card, ActivityIndicator, FAB, IconButton, Snackbar, useTheme, Dialog, Portal, Paragraph } from "react-native-paper";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -8,6 +8,7 @@ import { useMotorcycles } from "../context/MotorcycleContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme as useAppTheme } from "../context/ThemeContext";
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/DashboardScreen.styles';
 
 type DashboardNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -98,7 +99,7 @@ export default function DashboardScreen() {
 
   const renderMotorcycle = ({ item }: { item: any }) => (
     <Card 
-      style={styles.card} 
+      style={componentStyles.card} 
       onPress={() => {
         console.log("🚀 Dashboard - Navegando para MotorcycleDetails com ID:", item.id);
         console.log("🚀 Dashboard - Dados da moto:", item.plate, item.model);
@@ -107,46 +108,46 @@ export default function DashboardScreen() {
     >
       <Card.Title title={item.model} subtitle={`Placa: ${item.plate}`} />
       <Card.Content>
-        <View style={styles.row}>
-          <Text style={[styles.status, { backgroundColor: getStatusColor(item.status) }]}>
+        <View style={componentStyles.row}>
+          <Text style={[componentStyles.status, { backgroundColor: getStatusColor(item.status) }]}>
             {getStatusText(item.status)}
           </Text>
         </View>
-        <Text style={styles.info}>
+        <Text style={componentStyles.info}>
           📍 {item.location?.x?.toFixed(4)}, {item.location?.y?.toFixed(4)}
         </Text>
         {item.batteryLevel && (
-          <Text style={styles.info}>🔋 {item.batteryLevel}%</Text>
+          <Text style={componentStyles.info}>🔋 {item.batteryLevel}%</Text>
         )}
       </Card.Content>
     </Card>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header customizado removido para eliminar o espaço */}
 
-      <Text style={[styles.welcome, { color: theme.colors.onBackground, marginTop: 16 }]}>
+      <Text style={[componentStyles.welcome, { color: theme.colors.onBackground, marginTop: 16 }]}>
         Bem-vindo, {user?.name || 'Usuário'}!
       </Text>
 
       {/* Info de Debug */}
-      <Text style={[styles.debugInfo, { color: theme.colors.onBackground }]}>
+      <Text style={[componentStyles.debugInfo, { color: theme.colors.onBackground }]}>
         📊 Total de motos: {state.motorcycles.length}
       </Text>
 
       {/* Content */}
       {refreshing ? (
-        <View style={styles.loading}>
+        <View style={componentStyles.loading}>
           <ActivityIndicator size="large" />
           <Text style={[{ color: theme.colors.onBackground, textAlign: 'center', marginTop: 16, fontSize: 16 }]}>
             Carregando...
           </Text>
         </View>
       ) : state.motorcycles.length === 0 ? (
-        <ScrollView contentContainerStyle={styles.empty}>
-          <Text style={[styles.emptyText, { color: theme.colors.onBackground }]}>Nenhuma moto cadastrada</Text>
-          <Text style={[styles.emptySubText, { color: theme.colors.onSurfaceVariant }]}>Toque em + para adicionar</Text>
+        <ScrollView contentContainerStyle={componentStyles.empty}>
+          <Text style={[componentStyles.emptyText, { color: theme.colors.onBackground }]}>Nenhuma moto cadastrada</Text>
+          <Text style={[componentStyles.emptySubText, { color: theme.colors.onSurfaceVariant }]}>Toque em + para adicionar</Text>
         </ScrollView>
       ) : (
         <FlatList
@@ -155,13 +156,13 @@ export default function DashboardScreen() {
           keyExtractor={(item) => item.id}
           onRefresh={loadData}
           refreshing={refreshing}
-          style={styles.list}
+          style={componentStyles.list}
         />
       )}
 
       {/* FAB */}
       <FAB
-        style={styles.fab}
+        style={componentStyles.fab}
         icon="plus"
         onPress={() => navigation.navigate("AddMotorcycle")}
       />
@@ -202,108 +203,3 @@ export default function DashboardScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 0,
-    marginTop: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    elevation: 0,
-    shadowOpacity: 0,
-    position: 'absolute',
-    top: -10,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    borderBottomWidth: 0,
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  welcome: {
-    fontSize: 18,
-    textAlign: 'center',
-    padding: 16,
-    fontWeight: '600',
-  },
-  debugInfo: {
-    fontSize: 12,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  emptyText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  emptySubText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  list: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  card: {
-    marginBottom: 12,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  status: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    textAlign: 'center',
-  },
-  info: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 100, // Aumentado para ficar acima do copyright
-  },
-});

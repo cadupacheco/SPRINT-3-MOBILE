@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
+import { styles as componentStyles } from '../styles/components/StatusBadge.styles';
 
 interface StatusBadgeProps {
   status: 'available' | 'maintenance' | 'rented' | 'out_of_service'; // Adicione 'out_of_service'
@@ -24,49 +25,23 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStatusStyle = () => {
     switch (status) {
       case 'available':
-        return styles.available;
+        return componentStyles.available;
       case 'maintenance':
-        return styles.maintenance;
+        return componentStyles.maintenance;
       case 'rented':
-        return styles.rented;
+        return componentStyles.rented;
       case 'out_of_service':
-        return styles.outOfService; // Adicione o novo estilo
+        return componentStyles.outOfService; // Adicione o novo estilo
       default:
         return {};
     }
   };
 
   return (
-    <View style={[styles.container, getStatusStyle()]}>
-      <Text style={styles.text}>{getStatusText()}</Text>
+    <View style={[componentStyles.container, getStatusStyle()]}>
+      <Text style={componentStyles.text}>{getStatusText()}</Text>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    alignSelf: 'flex-start',
-  },
-  text: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  available: {
-    backgroundColor: '#1976d2',
-  },
-  maintenance: {
-    backgroundColor: '#ef6c00',
-  },
-  rented: {
-    backgroundColor: '#1565c0',
-  },
-  outOfService: {
-    backgroundColor: '#d32f2f', // Novo estilo para 'out_of_service'
-  },
-});
 
 export default StatusBadge;

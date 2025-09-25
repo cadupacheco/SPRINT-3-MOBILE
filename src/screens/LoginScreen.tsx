@@ -1,10 +1,11 @@
 // src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, TouchableOpacity, ScrollView } from "react-native";
 import { TextInput, Button, Text, useTheme, Card, Chip } from "react-native-paper";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/LoginScreen.styles';
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
@@ -99,10 +100,10 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Login</Text>
+    <View style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[componentStyles.title, { color: theme.colors.onBackground }]}>Login</Text>
 
-      <View style={styles.emailContainer}>
+      <View style={componentStyles.emailContainer}>
         <TextInput 
           label="Email" 
           value={email} 
@@ -115,7 +116,7 @@ export default function LoginScreen({ navigation }: any) {
             // Delay para permitir clique nas sugestões
             setTimeout(() => setShowEmailSuggestions(false), 200);
           }}
-          style={styles.input}
+          style={componentStyles.input}
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
@@ -123,15 +124,15 @@ export default function LoginScreen({ navigation }: any) {
         
         {/* Sugestões de emails */}
         {showEmailSuggestions && getFilteredSuggestions().length > 0 && (
-          <Card style={[styles.suggestionsCard, { backgroundColor: theme.colors.surface }]}>
-            <ScrollView style={styles.suggestionsContainer} nestedScrollEnabled>
+          <Card style={[componentStyles.suggestionsCard, { backgroundColor: theme.colors.surface }]}>
+            <ScrollView style={componentStyles.suggestionsContainer} nestedScrollEnabled>
               {getFilteredSuggestions().map((historicEmail, index) => (
                 <TouchableOpacity
                   key={index}
-                  style={[styles.suggestionItem, { borderBottomColor: theme.colors.outline }]}
+                  style={[componentStyles.suggestionItem, { borderBottomColor: theme.colors.outline }]}
                   onPress={() => selectEmailFromHistory(historicEmail)}
                 >
-                  <Text style={[styles.suggestionText, { color: theme.colors.onSurface }]}>
+                  <Text style={[componentStyles.suggestionText, { color: theme.colors.onSurface }]}>
                     {historicEmail}
                   </Text>
                 </TouchableOpacity>
@@ -143,15 +144,15 @@ export default function LoginScreen({ navigation }: any) {
 
       {/* Chips com emails recentes para acesso rápido */}
       {emailHistory.length > 0 && !showEmailSuggestions && (
-        <View style={styles.chipsContainer}>
-          <Text style={[styles.chipsLabel, { color: theme.colors.onSurfaceVariant }]}>
+        <View style={componentStyles.chipsContainer}>
+          <Text style={[componentStyles.chipsLabel, { color: theme.colors.onSurfaceVariant }]}>
             Emails recentes:
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={componentStyles.chipsScroll}>
             {emailHistory.slice(0, 3).map((historicEmail, index) => (
               <Chip
                 key={index}
-                style={styles.emailChip}
+                style={componentStyles.emailChip}
                 onPress={() => setEmail(historicEmail)}
                 mode="outlined"
               >
@@ -167,7 +168,7 @@ export default function LoginScreen({ navigation }: any) {
         value={password} 
         onChangeText={setPassword} 
         secureTextEntry={!showPassword}
-        style={styles.input}
+        style={componentStyles.input}
         onSubmitEditing={handleLogin}
         returnKeyType="go"
         right={
@@ -178,9 +179,9 @@ export default function LoginScreen({ navigation }: any) {
         }
       />
 
-      {error ? <Text style={[styles.error, { color: theme.colors.error }]}>{error}</Text> : null}
+      {error ? <Text style={[componentStyles.error, { color: theme.colors.error }]}>{error}</Text> : null}
 
-      <Button mode="contained" onPress={handleLogin} loading={loading} style={styles.button}>
+      <Button mode="contained" onPress={handleLogin} loading={loading} style={componentStyles.button}>
         Entrar
       </Button>
 
@@ -188,55 +189,3 @@ export default function LoginScreen({ navigation }: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
-  title: { fontSize: 28, marginBottom: 20, textAlign: "center" },
-  emailContainer: {
-    position: 'relative',
-    zIndex: 1000,
-  },
-  input: { marginBottom: 12 },
-  button: { marginTop: 16 },
-  error: { textAlign: "center", marginTop: 8 },
-  
-  // Estilos para sugestões dropdown
-  suggestionsCard: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    maxHeight: 150,
-    zIndex: 1000,
-    elevation: 5,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  suggestionsContainer: {
-    maxHeight: 150,
-  },
-  suggestionItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-  },
-  suggestionText: {
-    fontSize: 16,
-  },
-  
-  // Estilos para chips de emails recentes
-  chipsContainer: {
-    marginBottom: 16,
-  },
-  chipsLabel: {
-    fontSize: 12,
-    marginBottom: 8,
-    fontWeight: '500',
-  },
-  chipsScroll: {
-    flexDirection: 'row',
-  },
-  emailChip: {
-    marginRight: 8,
-  },
-});

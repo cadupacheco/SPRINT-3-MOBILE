@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { Button, Text, RadioButton, TextInput, ActivityIndicator, Snackbar } from "react-native-paper";
+import { Button, Text, RadioButton, TextInput, ActivityIndicator, Snackbar, Surface, useTheme } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import Copyright from "../components/Copyright";
+import { useTheme as useThemeContext } from "../context/ThemeContext";
+import { styles as componentStyles } from "../styles/screens/AddMotorcycleScreen.styles";
 
 type AddMotorcycleNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -315,8 +317,8 @@ export default function AddMotorcycleScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <Text style={styles.title}>
+    <ScrollView style={componentStyles.container} keyboardShouldPersistTaps="handled">
+      <Text style={componentStyles.title}>
         {isEditing ? "Editar Moto" : "Adicionar Nova Moto"}
       </Text>
 
@@ -326,17 +328,17 @@ export default function AddMotorcycleScreen() {
         value={model}
         onChangeText={setModel}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.model}
         autoComplete="off"
       />
-      {errors.model ? <Text style={styles.errorText}>{errors.model}</Text> : null}
+      {errors.model ? <Text style={componentStyles.errorText}>{errors.model}</Text> : null}
 
       {/* Placa - Exemplo */}
-      <View style={styles.exampleContainer}>
-        <Text style={styles.exampleTitle}>🚗 Formato da placa:</Text>
-        <Text style={styles.exampleText}>• Nova (Mercosul): "ABC1D23"</Text>
-        <Text style={styles.exampleText}>• Antiga: "ABC-1234"</Text>
+      <View style={componentStyles.exampleContainer}>
+        <Text style={componentStyles.exampleTitle}>🚗 Formato da placa:</Text>
+        <Text style={componentStyles.exampleText}>• Nova (Mercosul): "ABC1D23"</Text>
+        <Text style={componentStyles.exampleText}>• Antiga: "ABC-1234"</Text>
       </View>
 
       {/* Placa */}
@@ -345,17 +347,17 @@ export default function AddMotorcycleScreen() {
         value={plate}
         onChangeText={setPlate}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.plate}
         autoCapitalize="characters"
         maxLength={8}
         autoComplete="off"
         placeholder="ABC1D23 ou ABC-1234"
       />
-      {errors.plate ? <Text style={styles.errorText}>{errors.plate}</Text> : null}
+      {errors.plate ? <Text style={componentStyles.errorText}>{errors.plate}</Text> : null}
 
       {/* Status */}
-      <Text style={styles.sectionTitle}>Status</Text>
+      <Text style={componentStyles.sectionTitle}>Status</Text>
       <RadioButton.Group
         onValueChange={(value) =>
           setStatus(
@@ -364,7 +366,7 @@ export default function AddMotorcycleScreen() {
         }
         value={status}
       >
-        <View style={styles.radioContainer}>
+        <View style={componentStyles.radioContainer}>
           <RadioButton.Item label="Disponível" value="available" />
           <RadioButton.Item label="Em Manutenção" value="maintenance" />
           <RadioButton.Item label="Alugada" value="rented" />
@@ -373,14 +375,14 @@ export default function AddMotorcycleScreen() {
       </RadioButton.Group>
 
       {/* Localização */}
-      <Text style={styles.sectionTitle}>Localização Geográfica</Text>
-      <View style={styles.exampleContainer}>
-        <Text style={styles.exampleTitle}>📍 Exemplos de formato:</Text>
-        <Text style={styles.exampleText}>• Coordenadas geográficas: "23° 32′ 44″ S"</Text>
-        <Text style={styles.exampleText}>• Graus decimais: "-23.5456"</Text>
+      <Text style={componentStyles.sectionTitle}>Localização Geográfica</Text>
+      <View style={componentStyles.exampleContainer}>
+        <Text style={componentStyles.exampleTitle}>📍 Exemplos de formato:</Text>
+        <Text style={componentStyles.exampleText}>• Coordenadas geográficas: "23° 32′ 44″ S"</Text>
+        <Text style={componentStyles.exampleText}>• Graus decimais: "-23.5456"</Text>
       </View>
-      <View style={styles.locationContainer}>
-        <View style={styles.locationInput}>
+      <View style={componentStyles.locationContainer}>
+        <View style={componentStyles.locationInput}>
           <TextInput
             label="Latitude"
             value={locationX}
@@ -391,11 +393,11 @@ export default function AddMotorcycleScreen() {
             placeholder="Ex: 23° 32′ 44″ S"
           />
           {errors.locationX ? (
-            <Text style={styles.errorText}>{errors.locationX}</Text>
+            <Text style={componentStyles.errorText}>{errors.locationX}</Text>
           ) : null}
         </View>
 
-        <View style={styles.locationInput}>
+        <View style={componentStyles.locationInput}>
           <TextInput
             label="Longitude"
             value={locationY}
@@ -406,25 +408,25 @@ export default function AddMotorcycleScreen() {
             placeholder="Ex: 46° 28′ 26″ O"
           />
           {errors.locationY ? (
-            <Text style={styles.errorText}>{errors.locationY}</Text>
+            <Text style={componentStyles.errorText}>{errors.locationY}</Text>
           ) : null}
         </View>
       </View>
 
       {/* Informações Técnicas */}
-      <Text style={styles.sectionTitle}>Informações Técnicas</Text>
-      <View style={styles.exampleContainer}>
-        <Text style={styles.exampleTitle}>� Dados editáveis:</Text>
-        <Text style={styles.exampleText}>• Nível de bateria (ex: Bateria: 85%)</Text>
-        <Text style={styles.exampleText}>• Data da última manutenção</Text>
-        <Text style={styles.exampleText}>• Observações técnicas importantes</Text>
+      <Text style={componentStyles.sectionTitle}>Informações Técnicas</Text>
+      <View style={componentStyles.exampleContainer}>
+        <Text style={componentStyles.exampleTitle}>� Dados editáveis:</Text>
+        <Text style={componentStyles.exampleText}>• Nível de bateria (ex: Bateria: 85%)</Text>
+        <Text style={componentStyles.exampleText}>• Data da última manutenção</Text>
+        <Text style={componentStyles.exampleText}>• Observações técnicas importantes</Text>
       </View>
       <TextInput
         label="Informações Técnicas e Bateria (opcional)"
         value={technicalInfo}
         onChangeText={setTechnicalInfo}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         multiline
         numberOfLines={4}
         autoComplete="off"
@@ -437,13 +439,13 @@ export default function AddMotorcycleScreen() {
         value={batteryLevel}
         onChangeText={setBatteryLevel}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.batteryLevel}
         keyboardType="numeric"
         autoComplete="off"
         placeholder="Ex: 85"
       />
-      {errors.batteryLevel ? <Text style={styles.errorText}>{errors.batteryLevel}</Text> : null}
+      {errors.batteryLevel ? <Text style={componentStyles.errorText}>{errors.batteryLevel}</Text> : null}
 
       {/* Quilometragem */}
       <TextInput
@@ -451,13 +453,13 @@ export default function AddMotorcycleScreen() {
         value={mileage}
         onChangeText={setMileage}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.mileage}
         keyboardType="numeric"
         autoComplete="off"
         placeholder="Ex: 25000"
       />
-      {errors.mileage ? <Text style={styles.errorText}>{errors.mileage}</Text> : null}
+      {errors.mileage ? <Text style={componentStyles.errorText}>{errors.mileage}</Text> : null}
 
       {/* Próxima Manutenção */}
       <TextInput
@@ -465,12 +467,12 @@ export default function AddMotorcycleScreen() {
         value={nextMaintenanceDate}
         onChangeText={setNextMaintenanceDate}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.nextMaintenanceDate}
         autoComplete="off"
         placeholder="Ex: 2025-12-15"
       />
-      {errors.nextMaintenanceDate ? <Text style={styles.errorText}>{errors.nextMaintenanceDate}</Text> : null}
+      {errors.nextMaintenanceDate ? <Text style={componentStyles.errorText}>{errors.nextMaintenanceDate}</Text> : null}
 
       {/* Filial */}
       <TextInput
@@ -478,19 +480,19 @@ export default function AddMotorcycleScreen() {
         value={assignedBranch}
         onChangeText={setAssignedBranch}
         mode="outlined"
-        style={styles.input}
+        style={componentStyles.input}
         error={!!errors.assignedBranch}
         autoComplete="off"
         placeholder="Ex: São Paulo Centro"
       />
-      {errors.assignedBranch ? <Text style={styles.errorText}>{errors.assignedBranch}</Text> : null}
+      {errors.assignedBranch ? <Text style={componentStyles.errorText}>{errors.assignedBranch}</Text> : null}
 
       {/* Botões */}
-      <View style={styles.buttonContainer}>
+      <View style={componentStyles.buttonContainer}>
         <Button
           mode="outlined"
           onPress={() => navigation.goBack()}
-          style={styles.button}
+          style={componentStyles.button}
           icon="close"
           disabled={loading}
         >
@@ -500,7 +502,7 @@ export default function AddMotorcycleScreen() {
         <Button
           mode="contained"
           onPress={handleSaveMotorcycle}
-          style={styles.button}
+          style={componentStyles.button}
           icon="content-save"
           loading={loading}
           disabled={loading}
@@ -529,78 +531,3 @@ export default function AddMotorcycleScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  input: {
-    marginBottom: 8,
-  },
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  helpText: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-    fontStyle: "italic",
-  },
-  radioContainer: {
-    backgroundColor: "white",
-    borderRadius: 8,
-  },
-  locationContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  locationInput: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 24,
-    marginBottom: 24,
-  },
-  button: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  exampleContainer: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  exampleTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2196F3',
-    marginBottom: 8,
-  },
-  exampleText: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-    fontFamily: 'monospace',
-  },
-});

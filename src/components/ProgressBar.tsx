@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { styles as componentStyles } from '../styles/components/ProgressBar.styles';
 
 interface ProgressBarProps {
   value: number;
@@ -21,15 +23,15 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.labelContainer}>
-        <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{value}%</Text>
+    <View style={componentStyles.container}>
+      <View style={componentStyles.labelContainer}>
+        <Text style={componentStyles.label}>{label}</Text>
+        <Text style={componentStyles.value}>{value}%</Text>
       </View>
-      <View style={styles.barBackground}>
+      <View style={componentStyles.barBackground}>
         <View 
           style={[
-            styles.barFill, 
+            componentStyles.barFill, 
             { width: `${percentage}%`, backgroundColor: getBarColor() }
           ]} 
         />
@@ -37,34 +39,5 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  labelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 14,
-    color: '#555',
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  barBackground: {
-    height: 8,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-});
 
 export default ProgressBar;

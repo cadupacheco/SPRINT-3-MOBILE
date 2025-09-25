@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Alert, ScrollView } from 'react-native';
 import { Text, Switch, Button, Divider, List, useTheme as usePaperTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
 import Copyright from "../components/Copyright";
+import { styles as componentStyles } from '../styles/screens/SettingsScreen.styles';
 
 interface Settings {
   notifications: boolean;
@@ -72,8 +73,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>Configurações</Text>
+    <ScrollView style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[componentStyles.title, { color: theme.colors.onBackground }]}>Configurações</Text>
       
       <List.Section>
         <List.Subheader>Aparência</List.Subheader>
@@ -125,14 +126,14 @@ export default function SettingsScreen() {
             description={`A cada ${settings.refreshInterval} minutos`}
             left={props => <List.Icon {...props} icon="timer" />}
             right={() => (
-              <View style={styles.intervalControls}>
+              <View style={componentStyles.intervalControls}>
                 <Button 
                   onPress={() => updateSetting('refreshInterval', Math.max(1, settings.refreshInterval - 1))}
                   disabled={settings.refreshInterval <= 1}
                 >
                   -
                 </Button>
-                <Text style={styles.intervalText}>{settings.refreshInterval}</Text>
+                <Text style={componentStyles.intervalText}>{settings.refreshInterval}</Text>
                 <Button 
                   onPress={() => updateSetting('refreshInterval', Math.min(30, settings.refreshInterval + 1))}
                   disabled={settings.refreshInterval >= 30}
@@ -145,12 +146,12 @@ export default function SettingsScreen() {
         )}
       </List.Section>
       
-      <View style={[styles.dangerZone, { backgroundColor: theme.colors.errorContainer }]}>
-        <Text style={[styles.dangerTitle, { color: theme.colors.error }]}>Zona de Perigo</Text>
+      <View style={[componentStyles.dangerZone, { backgroundColor: theme.colors.errorContainer }]}>
+        <Text style={[componentStyles.dangerTitle, { color: theme.colors.error }]}>Zona de Perigo</Text>
         <Button 
           mode="contained" 
           onPress={handleClearData}
-          style={styles.dangerButton}
+          style={componentStyles.dangerButton}
           buttonColor={theme.colors.error}
           icon="delete"
         >
@@ -158,55 +159,12 @@ export default function SettingsScreen() {
         </Button>
       </View>
       
-      <View style={styles.versionContainer}>
-        <Text style={[styles.versionText, { color: theme.colors.onSurfaceVariant }]}>Versão 1.0.0</Text>
-        <Text style={[styles.copyrightText, { color: theme.colors.onSurfaceVariant }]}>© 2025 Mottu - Gerenciador de Pátio</Text>
+      <View style={componentStyles.versionContainer}>
+        <Text style={[componentStyles.versionText, { color: theme.colors.onSurfaceVariant }]}>Versão 1.0.0</Text>
+        <Text style={[componentStyles.copyrightText, { color: theme.colors.onSurfaceVariant }]}>© 2025 Mottu - Gerenciador de Pátio</Text>
       </View>
 
       <Copyright />
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  intervalControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  intervalText: {
-    marginHorizontal: 8,
-  },
-  dangerZone: {
-    marginTop: 32,
-    padding: 16,
-    borderRadius: 8,
-  },
-  dangerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  dangerButton: {
-  },
-  versionContainer: {
-    marginTop: 32,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  versionText: {
-    fontSize: 14,
-  },
-  copyrightText: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
