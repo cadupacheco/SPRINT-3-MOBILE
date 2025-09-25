@@ -26,23 +26,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const loadStorage = async () => {
       try {
-        console.log("AuthContext: Verificando storage...");
-        const storagedToken = await AsyncStorage.getItem("token");
-        const storagedUser = await AsyncStorage.getItem("user");
+        console.log("AuthContext: App iniciado - sempre exigir login manual");
         
-        console.log("Token encontrado:", !!storagedToken);
-        console.log("User encontrado:", !!storagedUser);
-
-        if (storagedToken && storagedUser) {
-          console.log("AuthContext: Usuário logado automaticamente");
-          setToken(storagedToken);
-          setUser(JSON.parse(storagedUser));
-          api.defaults.headers.common["Authorization"] = `Bearer ${storagedToken}`;
-        } else {
-          console.log("AuthContext: Nenhum usuário salvo, requer login");
-        }
+        // Limpar dados de login automático para garantir que sempre inicie na tela de login
+        await AsyncStorage.removeItem("token");
+        await AsyncStorage.removeItem("user");
+        
+        console.log("AuthContext: Dados de login automático removidos");
+        console.log("AuthContext: Iniciando na tela de login");
       } catch (error) {
-        console.error("AuthContext: Erro ao carregar storage:", error);
+        console.error("AuthContext: Erro ao limpar storage:", error);
       }
     };
     loadStorage();
