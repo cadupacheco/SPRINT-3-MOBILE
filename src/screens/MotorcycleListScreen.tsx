@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { View, FlatList, StyleSheet, Alert } from "react-native";
 import { Button, Card, Text, IconButton, ActivityIndicator } from "react-native-paper";
 import { useMotorcycles } from "../context/MotorcycleContext";
+import Copyright from "../components/Copyright";
 
 export default function MotorcycleListScreen({ navigation }: any) {
   const { state, actions } = useMotorcycles();
@@ -95,6 +96,8 @@ export default function MotorcycleListScreen({ navigation }: any) {
       >
         + Adicionar Moto
       </Button>
+
+      <Copyright />
     </View>
   );
 }
@@ -108,7 +111,8 @@ const styles = StyleSheet.create({
     marginBottom: 12 
   },
   addButton: { 
-    marginTop: 12 
+    marginTop: 12,
+    marginBottom: 24
   },
   centered: {
     flex: 1,

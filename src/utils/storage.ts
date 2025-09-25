@@ -12,6 +12,7 @@ export interface Motorcycle {
   mileage: number;
   nextMaintenanceDate: string;
   assignedBranch: string;
+  technicalInfo?: string;
   createdAt: string;
   updatedAt: string;
 }

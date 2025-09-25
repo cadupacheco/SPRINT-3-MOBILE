@@ -1,7 +1,8 @@
 import React from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme as usePaperTheme } from 'react-native-paper';
+import { useTheme as usePaperTheme, IconButton } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -54,6 +55,16 @@ function AuthNavigator() {
 
 function RootNavigator() {
   const theme = usePaperTheme();
+  const { user, logout } = useAuth();
+  const { isDarkTheme, toggleTheme } = useTheme();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Erro no logout:', error);
+    }
+  };
   
   return (
     <RootStack.Navigator 
@@ -72,7 +83,38 @@ function RootNavigator() {
       <RootStack.Screen 
         name="Dashboard" 
         component={DashboardScreen} 
-        options={{ title: 'Motos IdeaTec' }} 
+        options={({ navigation }) => ({ 
+          title: 'Dashboard',
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {/* Ícone de Usuários - Apenas para Administradores */}
+              {user?.role === 'admin' && (
+                <IconButton 
+                  icon="account-group" 
+                  size={24}
+                  iconColor="white"
+                  onPress={() => navigation.navigate('Users')}
+                />
+              )}
+              
+              {/* Ícone de Tema (Sol/Lua) */}
+              <IconButton 
+                icon={isDarkTheme ? "weather-sunny" : "weather-night"} 
+                size={24}
+                iconColor="white"
+                onPress={toggleTheme}
+              />
+              
+              {/* Ícone de Logout (Saída) */}
+              <IconButton 
+                icon="logout" 
+                size={24}
+                iconColor="white"
+                onPress={handleLogout}
+              />
+            </View>
+          )
+        })} 
       />
       <RootStack.Screen 
         name="Home" 

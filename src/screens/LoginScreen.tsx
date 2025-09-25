@@ -4,6 +4,7 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { TextInput, Button, Text, useTheme, Card, Chip } from "react-native-paper";
 import { useAuth } from "../context/AuthContext";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Copyright from "../components/Copyright";
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
@@ -182,6 +183,8 @@ export default function LoginScreen({ navigation }: any) {
       <Button mode="contained" onPress={handleLogin} loading={loading} style={styles.button}>
         Entrar
       </Button>
+
+      <Copyright />
     </View>
   );
 }

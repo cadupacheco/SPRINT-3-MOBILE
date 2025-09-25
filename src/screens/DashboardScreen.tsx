@@ -7,6 +7,7 @@ import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import { useAuth } from "../context/AuthContext";
 import { useTheme as useAppTheme } from "../context/ThemeContext";
+import Copyright from "../components/Copyright";
 
 type DashboardNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -78,7 +79,7 @@ export default function DashboardScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return '#1976d2';
+      case 'available': return '#4CAF50';
       case 'rented': return '#FF9800';
       case 'maintenance': return '#2196F3';
       default: return '#F44336';
@@ -131,7 +132,7 @@ export default function DashboardScreen() {
 
       {/* Info de Debug */}
       <Text style={[styles.debugInfo, { color: theme.colors.onBackground }]}>
-        📊 Total de motos: {state.motorcycles.length} | Estado: {refreshing ? "Carregando..." : "OK"}
+        📊 Total de motos: {state.motorcycles.length}
       </Text>
 
       {/* Content */}
@@ -196,6 +197,8 @@ export default function DashboardScreen() {
         }}>
         {snackbarMessage}
       </Snackbar>
+
+      <Copyright />
     </View>
   );
 }
@@ -301,6 +304,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     margin: 16,
     right: 0,
-    bottom: 0,
+    bottom: 100, // Aumentado para ficar acima do copyright
   },
 });

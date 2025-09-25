@@ -22,6 +22,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Copyright from "../components/Copyright";
 
 type MotorcycleDetailsRouteProp = RouteProp<
   RootStackParamList,
@@ -198,21 +199,18 @@ export default function MotorcycleDetailsScreen() {
           />
 
           <Divider style={styles.divider} />
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
-            <Text style={styles.infoValue}>{motorcycle.mileage} km</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
-            <Text style={styles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
-            <Text style={styles.infoValue}>{motorcycle.assignedBranch}</Text>
-          </View>
+
+          {motorcycle.technicalInfo && (
+            <>
+              <View style={styles.infoRow}>
+                <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>🔋 Dados Técnicos Editáveis:</Text>
+              </View>
+              <Text style={[styles.technicalInfoText, { color: theme.colors.onSurface }]}>
+                {motorcycle.technicalInfo}
+              </Text>
+              <Divider style={styles.divider} />
+            </>
+          )}
         </Card.Content>
       </Card>
 
@@ -263,6 +261,28 @@ export default function MotorcycleDetailsScreen() {
         </Card.Content>
       </Card>
 
+      {/* Informações Adicionais */}
+      <Card style={styles.card}>
+        <Card.Content>
+          <Title style={styles.sectionTitle}>Informações Adicionais</Title>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
+            <Text style={styles.infoValue}>{motorcycle.mileage} km</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
+            <Text style={styles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Text style={[styles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
+            <Text style={styles.infoValue}>{motorcycle.assignedBranch}</Text>
+          </View>
+        </Card.Content>
+      </Card>
+
       {/* Botões de ação */}
       <View style={styles.bottomButtons}>
         <Button
@@ -304,6 +324,8 @@ export default function MotorcycleDetailsScreen() {
         }}>
         {snackbarMessage}
       </Snackbar>
+
+      <Copyright />
     </ScrollView>
   );
 }
@@ -341,13 +363,24 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 14, fontWeight: "bold" },
   progressBar: { height: 8, borderRadius: 4, marginBottom: 16 },
   divider: { marginVertical: 12 },
+  technicalInfoText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 8,
+    marginBottom: 4,
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#1976d2',
+  },
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 8,
   },
   statusButton: { flex: 1, marginHorizontal: 4 },
-  availableButton: { backgroundColor: "#1976d2" },
+  availableButton: { backgroundColor: "#4CAF50" },
   maintenanceButton: { backgroundColor: "#ef6c00" },
   rentedButton: { backgroundColor: "#1565c0" },
   outOfServiceButton: { backgroundColor: "#d32f2f" },

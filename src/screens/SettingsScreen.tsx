@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Text, Switch, Button, Divider, List, useTheme as usePaperTheme } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../context/ThemeContext';
+import Copyright from "../components/Copyright";
 
 interface Settings {
   notifications: boolean;
@@ -161,6 +162,8 @@ export default function SettingsScreen() {
         <Text style={[styles.versionText, { color: theme.colors.onSurfaceVariant }]}>Versão 1.0.0</Text>
         <Text style={[styles.copyrightText, { color: theme.colors.onSurfaceVariant }]}>© 2025 Mottu - Gerenciador de Pátio</Text>
       </View>
+
+      <Copyright />
     </ScrollView>
   );
 }

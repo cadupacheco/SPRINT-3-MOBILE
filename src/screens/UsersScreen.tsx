@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList, Alert } from 'react-native';
 import { Card, Text, FAB, Button, IconButton, Menu, Dialog, Portal, TextInput, HelperText, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Copyright from "../components/Copyright";
 
 interface User {
   id: string;
@@ -576,6 +577,8 @@ export default function UsersScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      <Copyright />
     </View>
   );
 }
@@ -635,7 +638,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     margin: 16,
     right: 0,
-    bottom: 0,
+    bottom: 100, // Aumentado para ficar acima do copyright
   },
   input: {
     marginBottom: 16,

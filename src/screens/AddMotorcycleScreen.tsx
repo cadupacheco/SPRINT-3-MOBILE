@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp, NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AuthNavigator";
 import { useMotorcycles } from "../context/MotorcycleContext";
+import Copyright from "../components/Copyright";
 
 type AddMotorcycleNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,6 +29,11 @@ export default function AddMotorcycleScreen() {
   >("available");
   const [locationX, setLocationX] = useState("");
   const [locationY, setLocationY] = useState("");
+  const [technicalInfo, setTechnicalInfo] = useState("");
+  const [mileage, setMileage] = useState("");
+  const [nextMaintenanceDate, setNextMaintenanceDate] = useState("");
+  const [assignedBranch, setAssignedBranch] = useState("");
+  const [batteryLevel, setBatteryLevel] = useState("");
   const [loading, setLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -40,6 +46,11 @@ export default function AddMotorcycleScreen() {
       setStatus(motorcycleToEdit.status || "available");
       setLocationX(motorcycleToEdit.location?.x?.toString() || "");
       setLocationY(motorcycleToEdit.location?.y?.toString() || "");
+      setTechnicalInfo(motorcycleToEdit.technicalInfo || "");
+      setMileage(motorcycleToEdit.mileage?.toString() || "");
+      setNextMaintenanceDate(motorcycleToEdit.nextMaintenanceDate || "");
+      setAssignedBranch(motorcycleToEdit.assignedBranch || "");
+      setBatteryLevel(motorcycleToEdit.batteryLevel?.toString() || "");
     }
   }, [isEditing, motorcycleToEdit]);
 
@@ -49,6 +60,10 @@ export default function AddMotorcycleScreen() {
     plate: "",
     locationX: "",
     locationY: "",
+    mileage: "",
+    nextMaintenanceDate: "",
+    assignedBranch: "",
+    batteryLevel: "",
   });
 
   // Função para validar placa no formato AAA0A00 (Mercosul) ou ABC-1234 (antigo)
@@ -113,7 +128,16 @@ export default function AddMotorcycleScreen() {
   // Função de validação atualizada
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { model: "", plate: "", locationX: "", locationY: "" };
+    const newErrors = { 
+      model: "", 
+      plate: "", 
+      locationX: "", 
+      locationY: "",
+      mileage: "",
+      nextMaintenanceDate: "",
+      assignedBranch: "",
+      batteryLevel: ""
+    };
 
     if (!model.trim()) {
       newErrors.model = "Modelo é obrigatório";
@@ -141,6 +165,36 @@ export default function AddMotorcycleScreen() {
       isValid = false;
     } else if (parseCoordinate(locationY) === null) {
       newErrors.locationY = "Formato inválido (ex: 46° 28′ 26″ O ou -46.4739)";
+      isValid = false;
+    }
+
+    // Validar quilometragem (opcional, mas se preenchida deve ser número)
+    if (mileage.trim() && (isNaN(Number(mileage)) || Number(mileage) < 0)) {
+      newErrors.mileage = "Quilometragem deve ser um número válido";
+      isValid = false;
+    }
+
+    // Validar data de manutenção (opcional, mas se preenchida deve ser data futura)
+    if (nextMaintenanceDate.trim()) {
+      const maintenanceDate = new Date(nextMaintenanceDate);
+      const today = new Date();
+      if (isNaN(maintenanceDate.getTime())) {
+        newErrors.nextMaintenanceDate = "Data inválida (formato: AAAA-MM-DD)";
+        isValid = false;
+      } else if (maintenanceDate < today) {
+        newErrors.nextMaintenanceDate = "Data deve ser futura";
+        isValid = false;
+      }
+    }
+
+    if (!assignedBranch.trim()) {
+      newErrors.assignedBranch = "Filial é obrigatória";
+      isValid = false;
+    }
+
+    // Validar nível de bateria (opcional, mas se preenchido deve ser entre 0 e 100)
+    if (batteryLevel.trim() && (isNaN(Number(batteryLevel)) || Number(batteryLevel) < 0 || Number(batteryLevel) > 100)) {
+      newErrors.batteryLevel = "Nível de bateria deve ser entre 0 e 100";
       isValid = false;
     }
 
@@ -173,13 +227,14 @@ export default function AddMotorcycleScreen() {
           x: latitudeDecimal,
           y: longitudeDecimal,
         },
-        batteryLevel: motorcycleToEdit?.batteryLevel || Math.floor(Math.random() * 100),
+        technicalInfo: technicalInfo.trim() || undefined,
+        batteryLevel: batteryLevel.trim() ? parseInt(batteryLevel) : (motorcycleToEdit?.batteryLevel || Math.floor(Math.random() * 100)),
         fuelLevel: motorcycleToEdit?.fuelLevel || Math.floor(Math.random() * 100),
-        mileage: motorcycleToEdit?.mileage || Math.floor(Math.random() * 50000),
-        nextMaintenanceDate: motorcycleToEdit?.nextMaintenanceDate || new Date(
+        mileage: mileage.trim() ? parseInt(mileage) : (motorcycleToEdit?.mileage || Math.floor(Math.random() * 50000)),
+        nextMaintenanceDate: nextMaintenanceDate.trim() || (motorcycleToEdit?.nextMaintenanceDate || new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        assignedBranch: motorcycleToEdit?.assignedBranch || "São Paulo Centro",
+        ).toISOString()),
+        assignedBranch: assignedBranch.trim() || (motorcycleToEdit?.assignedBranch || "São Paulo Centro"),
         lastUpdate: new Date().toISOString(),
       };
 
@@ -222,7 +277,21 @@ export default function AddMotorcycleScreen() {
             setStatus("available");
             setLocationX("");
             setLocationY("");
-            setErrors({ model: "", plate: "", locationX: "", locationY: "" });
+            setTechnicalInfo("");
+            setMileage("");
+            setNextMaintenanceDate("");
+            setAssignedBranch("");
+            setBatteryLevel("");
+            setErrors({ 
+              model: "", 
+              plate: "", 
+              locationX: "", 
+              locationY: "",
+              mileage: "",
+              nextMaintenanceDate: "",
+              assignedBranch: "",
+              batteryLevel: ""
+            });
           }
           
           // Navegar para o Dashboard e resetar a stack
@@ -342,6 +411,80 @@ export default function AddMotorcycleScreen() {
         </View>
       </View>
 
+      {/* Informações Técnicas */}
+      <Text style={styles.sectionTitle}>Informações Técnicas</Text>
+      <View style={styles.exampleContainer}>
+        <Text style={styles.exampleTitle}>� Dados editáveis:</Text>
+        <Text style={styles.exampleText}>• Nível de bateria (ex: Bateria: 85%)</Text>
+        <Text style={styles.exampleText}>• Data da última manutenção</Text>
+        <Text style={styles.exampleText}>• Observações técnicas importantes</Text>
+      </View>
+      <TextInput
+        label="Informações Técnicas e Bateria (opcional)"
+        value={technicalInfo}
+        onChangeText={setTechnicalInfo}
+        mode="outlined"
+        style={styles.input}
+        multiline
+        numberOfLines={4}
+        autoComplete="off"
+        placeholder="Ex: Bateria: 85%, Última manutenção: 15/01/2025, Pneus trocados..."
+      />
+
+      {/* Nível de Bateria */}
+      <TextInput
+        label="Nível de Bateria (%)"
+        value={batteryLevel}
+        onChangeText={setBatteryLevel}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.batteryLevel}
+        keyboardType="numeric"
+        autoComplete="off"
+        placeholder="Ex: 85"
+      />
+      {errors.batteryLevel ? <Text style={styles.errorText}>{errors.batteryLevel}</Text> : null}
+
+      {/* Quilometragem */}
+      <TextInput
+        label="Quilometragem (km)"
+        value={mileage}
+        onChangeText={setMileage}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.mileage}
+        keyboardType="numeric"
+        autoComplete="off"
+        placeholder="Ex: 25000"
+      />
+      {errors.mileage ? <Text style={styles.errorText}>{errors.mileage}</Text> : null}
+
+      {/* Próxima Manutenção */}
+      <TextInput
+        label="Próxima Manutenção (AAAA-MM-DD)"
+        value={nextMaintenanceDate}
+        onChangeText={setNextMaintenanceDate}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.nextMaintenanceDate}
+        autoComplete="off"
+        placeholder="Ex: 2025-12-15"
+      />
+      {errors.nextMaintenanceDate ? <Text style={styles.errorText}>{errors.nextMaintenanceDate}</Text> : null}
+
+      {/* Filial */}
+      <TextInput
+        label="Filial *"
+        value={assignedBranch}
+        onChangeText={setAssignedBranch}
+        mode="outlined"
+        style={styles.input}
+        error={!!errors.assignedBranch}
+        autoComplete="off"
+        placeholder="Ex: São Paulo Centro"
+      />
+      {errors.assignedBranch ? <Text style={styles.errorText}>{errors.assignedBranch}</Text> : null}
+
       {/* Botões */}
       <View style={styles.buttonContainer}>
         <Button
@@ -381,6 +524,8 @@ export default function AddMotorcycleScreen() {
         }}>
         {snackbarMessage}
       </Snackbar>
+
+      <Copyright />
     </ScrollView>
   );
 }
