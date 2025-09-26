@@ -13,7 +13,7 @@ export const styles = StyleSheet.create({
     color: 'white',
   },
   available: {
-    backgroundColor: '#1976d2',
+    backgroundColor: '#42a5f5',
   },
   maintenance: {
     backgroundColor: '#ef6c00',

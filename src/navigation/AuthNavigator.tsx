@@ -43,7 +43,15 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 function AuthNavigator() {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen 
+        name="Login" 
+        component={LoginScreen} 
+        options={{ 
+          headerShown: true,
+          title: 'IdeaTec',
+          headerTitleAlign: 'center'
+        }} 
+      />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
     </AuthStack.Navigator>
   );
@@ -80,7 +88,7 @@ function RootNavigator() {
         name="Dashboard" 
         component={DashboardScreen} 
         options={({ navigation }) => ({ 
-          title: 'Dashboard',
+          title: 'Motos',
           headerRight: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {/* Ícone de Usuários - Apenas para Administradores */}

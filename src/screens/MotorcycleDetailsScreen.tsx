@@ -161,63 +161,64 @@ export default function MotorcycleDetailsScreen() {
         </Card.Content>
       </Card>
 
-      {/* Localização */}
-      <Card style={componentStyles.card}>
-        <Card.Content>
-          <Title style={componentStyles.sectionTitle}>Localização</Title>
-          <View style={componentStyles.infoRow}>
-            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
-            <Text style={componentStyles.infoValue}>
-              {motorcycle.location.x}, {motorcycle.location.y}
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-
       {/* Informações Técnicas */}
       <Card style={componentStyles.card}>
         <Card.Content>
           <Title style={componentStyles.sectionTitle}>Informações Técnicas</Title>
           
+          {/* Bateria */}
           <View style={componentStyles.infoRow}>
             <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Bateria:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.batteryLevel}%</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.batteryLevel || 0}%</Text>
           </View>
           <ProgressBar 
-            progress={motorcycle.batteryLevel / 100} 
-            color="#1976d2" 
+            progress={(motorcycle.batteryLevel || 0) / 100} 
+            color="#42a5f5" 
             style={componentStyles.progressBar} 
           />
 
+          {/* Combustível */}
           <View style={componentStyles.infoRow}>
             <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Combustível:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.fuelLevel}%</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.fuelLevel || 0}%</Text>
           </View>
           <ProgressBar 
-            progress={motorcycle.fuelLevel / 100} 
+            progress={(motorcycle.fuelLevel || 0) / 100} 
             color="#FF9800" 
             style={componentStyles.progressBar} 
           />
 
           <Divider style={componentStyles.divider} />
 
-          {motorcycle.technicalInfo && (
-            <>
-              <View style={componentStyles.infoRow}>
-                <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>🔋 Dados Técnicos Editáveis:</Text>
-              </View>
-              <Text style={[componentStyles.technicalInfoText, { color: theme.colors.onSurface }]}>
-                {motorcycle.technicalInfo}
-              </Text>
-              <Divider style={componentStyles.divider} />
-            </>
-          )}
-        </Card.Content>
-      </Card>
+          {/* Coordenadas */}
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
+            <Text style={componentStyles.infoValue}>
+              {motorcycle.location?.x || 0}, {motorcycle.location?.y || 0}
+            </Text>
+          </View>
 
-      {/* Alterar Status */}
-      <Card style={componentStyles.card}>
-        <Card.Content>
+          {/* Quilometragem */}
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.mileage || 0} km</Text>
+          </View>
+          
+          {/* Próxima Manutenção */}
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.nextMaintenanceDate || 'Não definida'}</Text>
+          </View>
+          
+          {/* Filial */}
+          <View style={componentStyles.infoRow}>
+            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
+            <Text style={componentStyles.infoValue}>{motorcycle.assignedBranch || 'Não definida'}</Text>
+          </View>
+
+          <Divider style={componentStyles.divider} />
+
+          {/* Alterar Status */}
           <Title style={componentStyles.sectionTitle}>Alterar Status</Title>
           
           <View style={componentStyles.buttonContainer}>
@@ -259,28 +260,19 @@ export default function MotorcycleDetailsScreen() {
               Fora de Serviço
             </Button>
           </View>
-        </Card.Content>
-      </Card>
 
-      {/* Informações Adicionais */}
-      <Card style={componentStyles.card}>
-        <Card.Content>
-          <Title style={componentStyles.sectionTitle}>Informações Adicionais</Title>
-          
-          <View style={componentStyles.infoRow}>
-            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Quilometragem:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.mileage} km</Text>
-          </View>
-          
-          <View style={componentStyles.infoRow}>
-            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Próxima Manutenção:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.nextMaintenanceDate}</Text>
-          </View>
-          
-          <View style={componentStyles.infoRow}>
-            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Filial:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.assignedBranch}</Text>
-          </View>
+          {/* Dados Técnicos Editáveis */}
+          {motorcycle.technicalInfo && (
+            <>
+              <Divider style={componentStyles.divider} />
+              <View style={componentStyles.infoRow}>
+                <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>🔋 Dados Técnicos Editáveis:</Text>
+              </View>
+              <Text style={[componentStyles.technicalInfoText, { color: theme.colors.onSurface }]}>
+                {motorcycle.technicalInfo}
+              </Text>
+            </>
+          )}
         </Card.Content>
       </Card>
 
