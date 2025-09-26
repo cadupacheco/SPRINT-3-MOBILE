@@ -5,7 +5,7 @@ import { MotorcycleProvider } from './src/context/MotorcycleContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { lightTheme, darkTheme } from './src/theme/theme';
-import AppNavigator from './src/navigation/AppNavigator';
+import AuthNavigator from './src/navigation/AuthNavigator';
 
 // Componente interno que usa o contexto de tema
 function AppContent() {
@@ -16,7 +16,7 @@ function AppContent() {
     <PaperProvider theme={theme}>
       <AuthProvider>
         <MotorcycleProvider>
-          <AppNavigator />
+          <AuthNavigator />
         </MotorcycleProvider>
       </AuthProvider>
     </PaperProvider>

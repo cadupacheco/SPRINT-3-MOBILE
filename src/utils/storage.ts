@@ -62,8 +62,6 @@ export const getMotorcycles = async (): Promise<Motorcycle[]> => {
 
 export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'createdAt' | 'updatedAt'>): Promise<string | null> => {
   try {
-    console.log("=== STORAGE: Iniciando criação ===");
-    console.log("Dados da moto:", motorcycle);
     
     if (!validateMotorcycle(motorcycle)) {
       console.error('STORAGE: Dados da moto inválidos');
@@ -71,7 +69,6 @@ export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'create
     }
 
     const motorcycles = await getMotorcycles();
-    console.log("STORAGE: Motos existentes:", motorcycles.length);
     
     // Verificar se já existe uma moto com a mesma placa
     const existingMoto = motorcycles.find(m => 
@@ -93,12 +90,10 @@ export const saveMotorcycle = async (motorcycle: Omit<Motorcycle, 'id' | 'create
       lastUpdate: now,
     };
 
-    console.log("STORAGE: Nova moto criada com ID:", newMotorcycle.id);
 
     motorcycles.push(newMotorcycle);
     await AsyncStorage.setItem('motorcycles', JSON.stringify(motorcycles));
     
-    console.log('STORAGE: Moto salva com sucesso. Total de motos:', motorcycles.length);
     return newMotorcycle.id;
   } catch (error) {
     console.error('STORAGE: Erro ao salvar moto:', error);
@@ -132,16 +127,11 @@ export const updateMotorcycle = async (id: string, updates: Partial<Motorcycle>)
 
 export const deleteMotorcycle = async (id: string): Promise<boolean> => {
   try {
-    console.log("=== STORAGE: Iniciando exclusão ===");
-    console.log("ID para excluir:", id);
     
     // Verificar se o AsyncStorage está acessível
     const testItem = await AsyncStorage.getItem('test');
-    console.log("AsyncStorage acessível:", testItem !== null || testItem === null);
     
     const motorcycles = await getMotorcycles();
-    console.log("Motos antes da exclusão:", motorcycles.length);
-    console.log("Lista de IDs:", motorcycles.map(m => `${m.id} (${m.plate})`));
     
     // Verificar se a moto existe
     const motoToDelete = motorcycles.find(m => m.id === id);
@@ -151,13 +141,10 @@ export const deleteMotorcycle = async (id: string): Promise<boolean> => {
       return false;
     }
     
-    console.log('STORAGE: Moto encontrada:', motoToDelete.plate, motoToDelete.model);
     
     const initialLength = motorcycles.length;
     const filteredMotorcycles = motorcycles.filter(m => m.id !== id);
     
-    console.log("Motos após filtro:", filteredMotorcycles.length);
-    console.log("Diferença:", initialLength - filteredMotorcycles.length);
     
     if (filteredMotorcycles.length === initialLength) {
       console.error('STORAGE: ERRO - Filtro não funcionou!');
@@ -167,20 +154,15 @@ export const deleteMotorcycle = async (id: string): Promise<boolean> => {
     // Fazer backup antes de salvar
     const backupKey = `motorcycles_backup_${Date.now()}`;
     await AsyncStorage.setItem(backupKey, JSON.stringify(motorcycles));
-    console.log('STORAGE: Backup criado:', backupKey);
     
     // Salvar nova lista
     await AsyncStorage.setItem('motorcycles', JSON.stringify(filteredMotorcycles));
-    console.log('STORAGE: Nova lista salva');
     
     // Verificar se foi salvo corretamente
     const verification = await AsyncStorage.getItem('motorcycles');
     const verifiedMotorcycles = verification ? JSON.parse(verification) : [];
-    console.log('STORAGE: Verificação - motos após save:', verifiedMotorcycles.length);
-    console.log('STORAGE: Verificação - IDs restantes:', verifiedMotorcycles.map((m: any) => m.id));
     
     const success = verifiedMotorcycles.length === filteredMotorcycles.length;
-    console.log('STORAGE: Verificação de sucesso:', success);
     
     return success;
   } catch (error) {

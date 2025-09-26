@@ -3,7 +3,7 @@ import { View, FlatList, TouchableOpacity } from 'react-native';
 import { Text, Button, Searchbar, FAB } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../navigation/AuthNavigator';
 import { useMotorcycles } from '../context/MotorcycleContext';
 import MotorcycleCard from '../components/MotorcycleCard';
 import LoadingSpinner from '../components/LoadingSpinner';
