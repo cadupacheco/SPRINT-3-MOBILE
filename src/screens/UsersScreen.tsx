@@ -62,17 +62,35 @@ export default function UsersScreen() {
     const mockUsers: User[] = [
       {
         id: '1',
-        name: 'Carlos Admin',
+        name: 'Carlos Pacheco',
         email: 'carlos@ideatec.com',
-        password: '123456',
+        password: 'C@du1328',
         role: 'admin',
         isActive: true,
         createdAt: '2025-01-15T10:00:00Z',
       },
       {
         id: '2', 
-        name: 'Pedro Operador',
+        name: 'Pedro Ladeira',
         email: 'pedro@ideatec.com',
+        password: '123456',
+        role: 'admin',
+        isActive: true,
+        createdAt: '2025-01-16T14:30:00Z',
+      },
+      {
+        id: '3', 
+        name: 'Professor',
+        email: 'pf@ideatec.com',
+        password: '123456',
+        role: 'admin',
+        isActive: true,
+        createdAt: '2025-01-16T14:30:00Z',
+      },
+      {
+        id: '4', 
+        name: 'Teste Operador',
+        email: 'operador@ideatec.com',
         password: '123456',
         role: 'operator',
         isActive: true,
@@ -104,10 +122,30 @@ export default function UsersScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              console.log('🔴 EXCLUINDO USUÁRIO - ID:', id);
+              console.log('🔴 USUÁRIOS ANTES:', users.length, users.map(u => u.name));
+              
               const updatedUsers = users.filter(user => user.id !== id);
-              await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
+              console.log('🔴 USUÁRIOS APÓS FILTRO:', updatedUsers.length, updatedUsers.map(u => u.name));
+              
+              // Primeiro atualizar o estado
               setUsers(updatedUsers);
+              
+              // Depois salvar no AsyncStorage
+              await AsyncStorage.setItem('users', JSON.stringify(updatedUsers));
+              
+              // Verificar se foi salvo corretamente
+              const verification = await AsyncStorage.getItem('users');
+              const savedUsers = verification ? JSON.parse(verification) : [];
+              console.log('🔴 VERIFICAÇÃO STORAGE:', savedUsers.length, savedUsers.map(u => u.name));
+              
               Alert.alert('Sucesso', 'Usuário excluído com sucesso!');
+              
+              // Forçar reload após pequeno delay
+              setTimeout(() => {
+                loadUsers();
+              }, 500);
+              
             } catch (error) {
               console.error('Erro ao excluir usuário:', error);
               Alert.alert('Erro', 'Não foi possível excluir o usuário.');
@@ -356,6 +394,36 @@ export default function UsersScreen() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Botão temporário para debug - REMOVER EM PRODUÇÃO */}
+      <Button 
+        mode="outlined" 
+        onPress={async () => {
+          Alert.alert(
+            'LIMPAR TODOS OS DADOS',
+            'Isso vai excluir TODOS os usuários do AsyncStorage. Tem certeza?',
+            [
+              { text: 'Cancelar', style: 'cancel' },
+              {
+                text: 'LIMPAR TUDO',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await AsyncStorage.removeItem('users');
+                    setUsers([]);
+                    Alert.alert('Sucesso', 'Todos os dados foram limpos! Recarregue o app.');
+                  } catch (error) {
+                    console.error('Erro ao limpar dados:', error);
+                  }
+                }
+              }
+            ]
+          );
+        }}
+        style={{ margin: 16, marginBottom: 80 }}
+      >
+        🗑️ DEBUG: Limpar AsyncStorage
+      </Button>
 
       <FAB
         style={[componentStyles.fab, { backgroundColor: theme.colors.primary }]}

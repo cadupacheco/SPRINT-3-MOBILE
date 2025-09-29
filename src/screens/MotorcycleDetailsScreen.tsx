@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Text,
@@ -82,31 +82,58 @@ export default function MotorcycleDetailsScreen() {
       setSnackbarVisible(true);
       return;
     }
-    
-    try {
-      setActionLoading(true);
-      console.log("🔴 DELETE - Excluindo moto:", motorcycle.plate, motorcycle.id);
-      
-      await actions.deleteMotorcycleById(motorcycle.id);
-      
-      setSnackbarMessage("✅ Moto excluída com sucesso!");
-      setSnackbarVisible(true);
-      
-      // Voltar para Dashboard após 1 segundo
-      setTimeout(() => {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Dashboard' }],
-        });
-      }, 1000);
-      
-    } catch (error) {
-      console.error("🔴 DELETE - Erro:", error);
-      setSnackbarMessage("❌ Erro ao excluir moto");
-      setSnackbarVisible(true);
-    } finally {
-      setActionLoading(false);
-    }
+
+    // Mostrar alerta de confirmação
+    Alert.alert(
+      "Confirmar Exclusão",
+      `Tem certeza que deseja excluir a motocicleta ${motorcycle.model} (${motorcycle.plate})?`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel"
+        },
+        {
+          text: "Excluir",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setActionLoading(true);
+              console.log("🔴 DELETE - Excluindo moto:", motorcycle.plate, motorcycle.id);
+              
+              // Força recarregar a lista antes de tentar deletar
+              await actions.loadMotorcycles();
+              
+              const success = await actions.deleteMotorcycleById(motorcycle.id);
+              console.log("🔴 DELETE - Resultado:", success);
+              
+              if (success) {
+                // Força recarregar novamente após deletar
+                await actions.loadMotorcycles();
+                
+                setSnackbarMessage("✅ Moto excluída com sucesso!");
+                setSnackbarVisible(true);
+                
+                // Voltar para Dashboard imediatamente
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Dashboard' }],
+                });
+              } else {
+                setSnackbarMessage("❌ Erro ao excluir moto - Tente novamente");
+                setSnackbarVisible(true);
+              }
+              
+            } catch (error) {
+              console.error("🔴 DELETE - Erro:", error);
+              setSnackbarMessage("❌ Erro ao excluir moto: " + (error instanceof Error ? error.message : 'Erro desconhecido'));
+              setSnackbarVisible(true);
+            } finally {
+              setActionLoading(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const getStatusText = (status: string) => {
@@ -146,7 +173,7 @@ export default function MotorcycleDetailsScreen() {
 
   return (
     <ScrollView style={[componentStyles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Informações da Moto */}
+      {/* Card Principal - Informações básicas da moto */}
       <Card style={componentStyles.card}>
         <Card.Content>
           <Title style={componentStyles.title}>{motorcycle.model}</Title>
@@ -161,10 +188,10 @@ export default function MotorcycleDetailsScreen() {
         </Card.Content>
       </Card>
 
-      {/* Informações Técnicas */}
+      {/* Card Informações Técnicas */}
       <Card style={componentStyles.card}>
-        <Card.Content>
-          <Title style={componentStyles.sectionTitle}>Informações Técnicas</Title>
+        <Card.Content style={{ paddingVertical: 12, paddingHorizontal: 16 }}>
+          <Title style={componentStyles.sectionTitle}>Nivel da bateria</Title>
           
           {/* Bateria */}
           <View style={componentStyles.infoRow}>
@@ -176,20 +203,14 @@ export default function MotorcycleDetailsScreen() {
             color="#42a5f5" 
             style={componentStyles.progressBar} 
           />
+        </Card.Content>
+      </Card>
 
-          {/* Combustível */}
-          <View style={componentStyles.infoRow}>
-            <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Combustível:</Text>
-            <Text style={componentStyles.infoValue}>{motorcycle.fuelLevel || 0}%</Text>
-          </View>
-          <ProgressBar 
-            progress={(motorcycle.fuelLevel || 0) / 100} 
-            color="#FF9800" 
-            style={componentStyles.progressBar} 
-          />
-
-          <Divider style={componentStyles.divider} />
-
+      {/* Card Informações Técnicas Detalhadas */}
+      <Card style={componentStyles.card}>
+        <Card.Content style={{ paddingVertical: 12, paddingHorizontal: 16 }}>
+          <Title style={componentStyles.sectionTitle}>Informações Detalhadas</Title>
+          
           {/* Coordenadas */}
           <View style={componentStyles.infoRow}>
             <Text style={[componentStyles.infoLabel, { color: theme.colors.onSurfaceVariant }]}>Coordenadas:</Text>
@@ -216,51 +237,6 @@ export default function MotorcycleDetailsScreen() {
             <Text style={componentStyles.infoValue}>{motorcycle.assignedBranch || 'Não definida'}</Text>
           </View>
 
-          <Divider style={componentStyles.divider} />
-
-          {/* Alterar Status */}
-          <Title style={componentStyles.sectionTitle}>Alterar Status</Title>
-          
-          <View style={componentStyles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("available")}
-              style={[componentStyles.statusButton, componentStyles.availableButton]}
-              disabled={motorcycle.status === "available"}
-            >
-              Disponível
-            </Button>
-
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("maintenance")}
-              style={[componentStyles.statusButton, componentStyles.maintenanceButton]}
-              disabled={motorcycle.status === "maintenance"}
-            >
-              Manutenção
-            </Button>
-          </View>
-
-          <View style={componentStyles.buttonContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("rented")}
-              style={[componentStyles.statusButton, componentStyles.rentedButton]}
-              disabled={motorcycle.status === "rented"}
-            >
-              Alugada
-            </Button>
-
-            <Button
-              mode="contained"
-              onPress={() => handleStatusChange("out_of_service")}
-              style={[componentStyles.statusButton, componentStyles.outOfServiceButton]}
-              disabled={motorcycle.status === "out_of_service"}
-            >
-              Fora de Serviço
-            </Button>
-          </View>
-
           {/* Dados Técnicos Editáveis */}
           {motorcycle.technicalInfo && (
             <>
@@ -276,8 +252,65 @@ export default function MotorcycleDetailsScreen() {
         </Card.Content>
       </Card>
 
-      {/* Botões de ação */}
-      <View style={componentStyles.bottomButtons}>
+      {/* Botões de Status */}
+      <View style={componentStyles.buttonContainer}>
+        <Button
+          mode="contained"
+          onPress={() => handleStatusChange("available")}
+          style={[componentStyles.statusButton, componentStyles.availableButton]}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
+          disabled={motorcycle.status === "available"}
+        >
+          Disponível
+        </Button>
+
+        <Button
+          mode="contained"
+          onPress={() => handleStatusChange("maintenance")}
+          style={[componentStyles.statusButton, componentStyles.maintenanceButton]}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
+          disabled={motorcycle.status === "maintenance"}
+        >
+          Manutenção
+        </Button>
+      </View>
+
+      <View style={componentStyles.buttonContainer}>
+        <Button
+          mode="contained"
+          onPress={() => handleStatusChange("rented")}
+          style={[componentStyles.statusButton, componentStyles.rentedButton]}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
+          disabled={motorcycle.status === "rented"}
+        >
+          Alugada
+        </Button>
+
+        <Button
+          mode="contained"
+          onPress={() => handleStatusChange("out_of_service")}
+          style={[componentStyles.statusButton, componentStyles.outOfServiceButton]}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
+          disabled={motorcycle.status === "out_of_service"}
+        >
+          Fora de Serviço
+        </Button>
+      </View>
+
+      {/* Botões de Ação */}
+      <View style={[componentStyles.bottomButtons, { marginTop: 24, marginBottom: 16 }]}>
         <Button
           mode="outlined"
           onPress={() => navigation.goBack()}
@@ -291,6 +324,10 @@ export default function MotorcycleDetailsScreen() {
           mode="contained"
           onPress={handleEdit}
           style={componentStyles.button}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
           icon="pencil"
         >
           Editar
@@ -300,12 +337,18 @@ export default function MotorcycleDetailsScreen() {
           mode="contained"
           onPress={handleDelete}
           style={[componentStyles.button, { backgroundColor: "#d32f2f" }]}
+          labelStyle={{
+            color: theme.dark ? 'white' : undefined,
+            fontWeight: theme.dark ? 'bold' : 'normal'
+          }}
           icon="delete"
           disabled={actionLoading}
         >
           Excluir
         </Button>
       </View>
+
+      <Copyright />
       
       <Snackbar
         visible={snackbarVisible}
@@ -317,8 +360,6 @@ export default function MotorcycleDetailsScreen() {
         }}>
         {snackbarMessage}
       </Snackbar>
-
-      <Copyright />
     </ScrollView>
   );
 }
